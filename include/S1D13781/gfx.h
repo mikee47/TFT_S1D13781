@@ -459,7 +459,7 @@ public:
 	 *  @param imageWidth
 	 *  @param imageHeight
 	 */
-	void drawImage(const FlashString& image, WindowDestination window, int x, int y, unsigned imageWidth,
+	void drawImage(const FSTR::ObjectBase& image, WindowDestination window, int x, int y, unsigned imageWidth,
 				   unsigned imageHeight);
 
 	//uint16_t drawImage();  //TODO add for future versions of library

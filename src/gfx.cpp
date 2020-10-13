@@ -649,7 +649,7 @@ unsigned int S1D13781_gfx::drawMultiLineTextW(WindowDestination window, const Se
 
 */
 
-void S1D13781_gfx::drawImage(const FlashString& image, WindowDestination window, int x, int y, unsigned imageWidth,
+void S1D13781_gfx::drawImage(const FSTR::ObjectBase& image, WindowDestination window, int x, int y, unsigned imageWidth,
 							 unsigned imageHeight)
 {
 	unsigned xs = 1;
