@@ -94,7 +94,7 @@ struct __attribute__((packed)) SeBltParam {
 };
 #pragma pack()
 
-S1D13781::S1D13781()
+S1D13781::S1D13781(HSPI::Device& dev) : spidev(dev)
 {
 	cache = new uint16_t[CACHED_REG_COUNT];
 }
@@ -104,12 +104,10 @@ S1D13781::~S1D13781()
 	delete cache;
 }
 
-bool S1D13781::begin(HSPI::Controller* spi, uint32_t speed)
+bool S1D13781::begin()
 {
-	spidev.begin(spi);
 	spidev.setBitOrder(MSBFIRST);
 	spidev.setMode(HSPI::Mode0);
-	spidev.setSpeed(speed);
 	return initRegs();
 }
 

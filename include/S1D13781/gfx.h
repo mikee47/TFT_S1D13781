@@ -116,6 +116,8 @@ enum IntersectType {
 class S1D13781_gfx : public S1D13781
 {
 public:
+	using S1D13781::S1D13781;
+
 	/** @brief Fill the destination window with a specified color.
 	 *
 	 * param	window	Destination window to be filled.

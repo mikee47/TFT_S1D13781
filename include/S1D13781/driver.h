@@ -132,13 +132,14 @@ enum BltCommand {
 class S1D13781
 {
 public:
-	S1D13781();
+	S1D13781(HSPI::Device& dev);
 	~S1D13781();
 
 	/** @brief This method should be run once to setup the SPI interface used by
 	 * 	the S1D13781 evaluation board and configure the registers.
+	 * 	Note that bus speed must already be configured.
 	 */
-	bool begin(HSPI::Controller* spi, uint32_t speed);
+	bool begin();
 
 	// Direct register and memory access
 
@@ -790,7 +791,7 @@ private:
 
 	// Member data
 
-	HSPI::Device spidev; ///< SPI device to talk to display
+	HSPI::Device& spidev; ///< SPI device to talk to display
 
 	// Separate packets for IN/OUT allows one to be set up while the other is in flight
 	HSPI::Packet outPacket;
