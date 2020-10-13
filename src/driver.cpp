@@ -1,5 +1,5 @@
 /* ======================================================================
- * S1d13781.cpp
+ * S1D13781.cpp
  * Source file for S1D13781 Shield Hardware library
  * 
  * (C)SEIKO EPSON CORPORATION 2015. All rights reserved.
@@ -24,11 +24,11 @@
  *
  */
 
-#include "S1d13781.h"
-#include "../S1d13781_registers.h"
-#include "S1d13781_init.h"
-#include "Digital.h"
-#include "Clock.h"
+#include <S1D13781/driver.h>
+#include <S1D13781/registers.h>
+#include "init.h"
+#include <Digital.h>
+#include <Clock.h>
 #include <Platform/Timers.h>
 
 // S1D13781 SPI Commands
@@ -94,26 +94,26 @@ struct __attribute__((packed)) SeBltParam {
 };
 #pragma pack()
 
-S1d13781::S1d13781()
+S1D13781::S1D13781()
 {
 	cache = new uint16_t[CACHED_REG_COUNT];
 }
 
-S1d13781::~S1d13781()
+S1D13781::~S1D13781()
 {
 	delete cache;
 }
 
-bool S1d13781::begin(SpiMaster* spi, uint32_t speed)
+bool S1D13781::begin(HSPI::Controller* spi, uint32_t speed)
 {
 	spidev.begin(spi);
 	spidev.setBitOrder(MSBFIRST);
-	spidev.setMode(SPI_MODE0);
-	spidev.setClockSpeed(speed);
+	spidev.setMode(HSPI::Mode0);
+	spidev.setSpeed(speed);
 	return initRegs();
 }
 
-void S1d13781::updateTiming()
+void S1D13781::updateTiming()
 {
 	uint16_t reg12 = regReadCached(REG12_PLL_1);
 	timing.nCounter = (reg12 >> 10) & 0x0F;
@@ -131,7 +131,7 @@ void S1d13781::updateTiming()
 	timing.frameInterval = 1000UL * (hdisp + hndp) * (vdisp + vndp) / (timing.pclk / 1000UL);
 }
 
-bool S1d13781::initRegs()
+bool S1D13781::initRegs()
 {
 	// Initialise cache
 	memBurstReadBytes(S1D13781_REG_BASE + CACHED_REG_MIN, cache, CACHED_REG_COUNT * 2);
@@ -181,7 +181,7 @@ bool S1d13781::initRegs()
 	return true;
 }
 
-bool S1d13781::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, unsigned int timeoutMs)
+bool S1D13781::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, unsigned int timeoutMs)
 {
 	OneShotFastMs timer(timeoutMs);
 	do {
@@ -195,7 +195,7 @@ bool S1d13781::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, un
 	return false;
 }
 
-uint16_t S1d13781::regModify(uint8_t regIndex, uint16_t clearBits, uint16_t setBits)
+uint16_t S1D13781::regModify(uint8_t regIndex, uint16_t clearBits, uint16_t setBits)
 {
 	uint16_t regData = regReadCached(regIndex);
 	regData &= ~clearBits;
@@ -204,7 +204,7 @@ uint16_t S1d13781::regModify(uint8_t regIndex, uint16_t clearBits, uint16_t setB
 	return regData;
 }
 
-uint16_t S1d13781::regSetBits(uint8_t regIndex, uint16_t setBits)
+uint16_t S1D13781::regSetBits(uint8_t regIndex, uint16_t setBits)
 {
 	uint16_t regData = regReadCached(regIndex);
 	regData |= setBits;
@@ -212,7 +212,7 @@ uint16_t S1d13781::regSetBits(uint8_t regIndex, uint16_t setBits)
 	return regData;
 }
 
-uint16_t S1d13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
+uint16_t S1D13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
 {
 	uint16_t regData = regReadCached(regIndex);
 	regData &= ~clearBits;
@@ -220,7 +220,7 @@ uint16_t S1d13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
 	return regData;
 }
 
-void S1d13781::memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t valueLen)
+void S1D13781::memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t valueLen)
 {
 	outPacket.prepare();
 	outPacket.setCommand8(SPIWRITE_8BIT);
@@ -233,7 +233,7 @@ void S1d13781::memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t va
 	spidev.execute(outPacket);
 }
 
-uint32_t S1d13781::memReadWord32(uint32_t memAddress, uint8_t valueLen)
+uint32_t S1D13781::memReadWord32(uint32_t memAddress, uint8_t valueLen)
 {
 	inPacket.prepare();
 	inPacket.setCommand8(SPIREAD_8BIT);
@@ -255,7 +255,7 @@ uint32_t S1d13781::memReadWord32(uint32_t memAddress, uint8_t valueLen)
 	return inPacket.in.data32;
 }
 
-void S1d13781::memBurstWriteBytes(uint32_t memAddress, const void* memValues, uint16_t count, SpiCallback callback,
+void S1D13781::memBurstWriteBytes(uint32_t memAddress, const void* memValues, uint16_t count, HSPI::Callback callback,
 								  void* param)
 {
 	//	debug_i("memBurstWriteBytes(0x%08x, 0x%08x, %u", memAddress, memValues, count);
@@ -284,7 +284,7 @@ void S1d13781::memBurstWriteBytes(uint32_t memAddress, const void* memValues, ui
 	spidev.execute(outPacket);
 }
 
-void S1d13781::memBurstReadBytes(uint32_t memAddress, void* memValues, uint16_t count, SpiCallback callback,
+void S1D13781::memBurstReadBytes(uint32_t memAddress, void* memValues, uint16_t count, HSPI::Callback callback,
 								 void* param)
 {
 	inPacket.prepare();
@@ -299,7 +299,7 @@ void S1d13781::memBurstReadBytes(uint32_t memAddress, void* memValues, uint16_t 
 	spidev.execute(inPacket);
 }
 
-void S1d13781::regWrite(uint8_t regIndex, uint16_t regValue)
+void S1D13781::regWrite(uint8_t regIndex, uint16_t regValue)
 {
 	debug_reg("regWrite(0x%02x, 0x%04x)", regIndex, regValue);
 	memWriteWord(S1D13781_REG_BASE + regIndex, regValue);
@@ -317,7 +317,7 @@ void S1d13781::regWrite(uint8_t regIndex, uint16_t regValue)
 #endif
 }
 
-void S1d13781::regWrite32(uint8_t regIndex, uint32_t regValue)
+void S1D13781::regWrite32(uint8_t regIndex, uint32_t regValue)
 {
 	debug_reg("regWrite32(0x%02x, 0x%08x)", regIndex, regValue);
 	memWriteWord32(S1D13781_REG_BASE + regIndex, regValue);
@@ -336,7 +336,7 @@ void S1d13781::regWrite32(uint8_t regIndex, uint32_t regValue)
 #endif
 }
 
-uint16_t S1d13781::regReadCached(uint8_t regIndex)
+uint16_t S1D13781::regReadCached(uint8_t regIndex)
 {
 	uint16_t value;
 #ifdef CACHE_ENABLE
@@ -357,7 +357,7 @@ uint16_t S1d13781::regReadCached(uint8_t regIndex)
 	return value;
 }
 
-uint32_t S1d13781::regReadCached32(uint8_t regIndex)
+uint32_t S1D13781::regReadCached32(uint8_t regIndex)
 {
 	uint32_t value;
 #ifdef CACHE_ENABLE
@@ -395,7 +395,7 @@ static __forceinline uint8_t regSelect(WindowDestination window, uint8_t regMain
 	}
 }
 
-void S1d13781::setRotation(WindowDestination window, uint16_t rotationDegrees)
+void S1D13781::setRotation(WindowDestination window, uint16_t rotationDegrees)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	if(reg) {
@@ -403,13 +403,13 @@ void S1d13781::setRotation(WindowDestination window, uint16_t rotationDegrees)
 	}
 }
 
-uint16_t S1d13781::getRotation(WindowDestination window)
+uint16_t S1D13781::getRotation(WindowDestination window)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	return reg ? (regReadCached(reg) >> 3) * 90 : 0;
 }
 
-void S1d13781::setColorDepth(WindowDestination window, ImageDataFormat colorDepth)
+void S1D13781::setColorDepth(WindowDestination window, ImageDataFormat colorDepth)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	if(reg) {
@@ -417,13 +417,13 @@ void S1d13781::setColorDepth(WindowDestination window, ImageDataFormat colorDept
 	}
 }
 
-ImageDataFormat S1d13781::getColorDepth(WindowDestination window)
+ImageDataFormat S1D13781::getColorDepth(WindowDestination window)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	return ImageDataFormat(regReadCached(reg) & 0x0007);
 }
 
-void S1d13781::setStartAddress(WindowDestination window, uint32_t lcdStartAddress)
+void S1D13781::setStartAddress(WindowDestination window, uint32_t lcdStartAddress)
 {
 	auto reg = regSelect(window, REG42_MAIN_SADDR_0, REG52_PIP_SADDR_0);
 	if(reg) {
@@ -431,13 +431,13 @@ void S1d13781::setStartAddress(WindowDestination window, uint32_t lcdStartAddres
 	}
 }
 
-uint32_t S1d13781::getStartAddress(WindowDestination window)
+uint32_t S1D13781::getStartAddress(WindowDestination window)
 {
 	auto reg = regSelect(window, REG42_MAIN_SADDR_0, REG52_PIP_SADDR_0);
 	return reg ? regReadCached32(reg) : 0xFFFFFFFF;
 }
 
-uint32_t S1d13781::getAddress(WindowDestination window, uint16_t x, uint16_t y)
+uint32_t S1D13781::getAddress(WindowDestination window, uint16_t x, uint16_t y)
 {
 	uint32_t addr = getStartAddress(window);
 	if(int(addr) >= 0) {
@@ -446,17 +446,17 @@ uint32_t S1d13781::getAddress(WindowDestination window, uint16_t x, uint16_t y)
 	return addr;
 }
 
-uint16_t S1d13781::getDisplayWidth()
+uint16_t S1D13781::getDisplayWidth()
 {
 	return regReadCached(REG24_HDISP) * 8;
 }
 
-uint16_t S1d13781::getDisplayHeight()
+uint16_t S1D13781::getDisplayHeight()
 {
 	return regReadCached(REG28_VDISP);
 }
 
-void S1d13781::setWidth(WindowDestination window, uint16_t width)
+void S1D13781::setWidth(WindowDestination window, uint16_t width)
 {
 	if(window == window_Pip) {
 		regWrite(REG56_PIP_WIDTH, width);
@@ -465,7 +465,7 @@ void S1d13781::setWidth(WindowDestination window, uint16_t width)
 	}
 }
 
-uint16_t S1d13781::getWidth(WindowDestination window)
+uint16_t S1D13781::getWidth(WindowDestination window)
 {
 	uint16_t width = 0;
 	if(window == window_Pip) {
@@ -481,7 +481,7 @@ uint16_t S1d13781::getWidth(WindowDestination window)
 	return width;
 }
 
-void S1d13781::setHeight(WindowDestination window, uint16_t height)
+void S1D13781::setHeight(WindowDestination window, uint16_t height)
 {
 	auto reg = regSelect(window, REG28_VDISP, REG58_PIP_HEIGHT);
 	if(reg) {
@@ -489,7 +489,7 @@ void S1d13781::setHeight(WindowDestination window, uint16_t height)
 	}
 }
 
-uint16_t S1d13781::getHeight(WindowDestination window)
+uint16_t S1D13781::getHeight(WindowDestination window)
 {
 	uint16_t height = 0;
 	if(window == window_Pip) {
@@ -505,7 +505,7 @@ uint16_t S1d13781::getHeight(WindowDestination window)
 	return height;
 }
 
-SeSize S1d13781::getWindowSize(WindowDestination window)
+SeSize S1D13781::getWindowSize(WindowDestination window)
 {
 	SeSize size;
 	if(window == window_Pip) {
@@ -525,7 +525,7 @@ SeSize S1d13781::getWindowSize(WindowDestination window)
 	return size;
 }
 
-uint16_t S1d13781::getStride(WindowDestination window)
+uint16_t S1D13781::getStride(WindowDestination window)
 {
 	return getWidth(window) * getBytesPerPixel(window);
 }
@@ -536,7 +536,7 @@ uint16_t S1d13781::getStride(WindowDestination window)
  * ===================================================================== 
 */
 
-void S1d13781::pipSetDisplayMode(PipEffect newEffect)
+void S1D13781::pipSetDisplayMode(PipEffect newEffect)
 {
 	//check whether the effect needs to finish first
 	PipEffect currentEffect = pipGetDisplayMode();
@@ -552,12 +552,12 @@ void S1d13781::pipSetDisplayMode(PipEffect newEffect)
 	regModify(REG60_PIP_EN, 0x0007, newEffect & 0x0007);
 }
 
-PipEffect S1d13781::pipGetDisplayMode()
+PipEffect S1D13781::pipGetDisplayMode()
 {
 	return PipEffect(regReadCached(REG60_PIP_EN) & 0x0007);
 }
 
-bool S1d13781::pipIsOrthogonal()
+bool S1D13781::pipIsOrthogonal()
 {
 	return getRotation(window_Main) == getRotation(window_Pip);
 }
@@ -584,7 +584,7 @@ static void rotatePos(SePos& pos, const SeSize size, uint16_t degrees)
 	}
 }
 
-void S1d13781::pipSetPosition(SePos pos)
+void S1D13781::pipSetPosition(SePos pos)
 {
 	SePos p1 = pos;
 	rotatePos(pos, getWindowSize(window_Pip), getRotation(window_Pip));
@@ -592,7 +592,7 @@ void S1d13781::pipSetPosition(SePos pos)
 	regWrite32(REG5A_PIP_XSTART, pos.val);
 }
 
-SePos S1d13781::pipGetPosition()
+SePos S1D13781::pipGetPosition()
 {
 	SePos pos;
 	pos.val = regReadCached32(REG5A_PIP_XSTART);
@@ -602,22 +602,22 @@ SePos S1d13781::pipGetPosition()
 	return pos;
 }
 
-void S1d13781::pipSetFadeRate(uint8_t fadeRate)
+void S1D13781::pipSetFadeRate(uint8_t fadeRate)
 {
 	regModify(REG60_PIP_EN, 0xFE00, (fadeRate - 1) << 9);
 }
 
-uint8_t S1d13781::pipGetFadeRate()
+uint8_t S1D13781::pipGetFadeRate()
 {
 	return (regReadCached(REG60_PIP_EN) >> 9) + 1;
 }
 
-bool S1d13781::pipWaitForFade(uint16_t maxTime)
+bool S1D13781::pipWaitForFade(uint16_t maxTime)
 {
 	return regWaitForLow(REG60_PIP_EN, BIT(3), maxTime);
 }
 
-void S1d13781::pipSetAlphaBlendStep(uint8_t step)
+void S1D13781::pipSetAlphaBlendStep(uint8_t step)
 {
 	uint8_t bits;
 	if(step <= 1)
@@ -631,24 +631,24 @@ void S1d13781::pipSetAlphaBlendStep(uint8_t step)
 	regModify(REG62_ALPHA, 0x0300, bits << 8);
 }
 
-uint16_t S1d13781::pipGetAlphaBlendStep()
+uint16_t S1D13781::pipGetAlphaBlendStep()
 {
 	return 1 << (regReadCached(REG62_ALPHA) >> 8);
 }
 
-void S1d13781::pipSetAphaBlendRatio(uint8_t ratio)
+void S1D13781::pipSetAphaBlendRatio(uint8_t ratio)
 {
 	// Calculate the nearest register value (alphaRegValue) to the Alpha %
 	uint8_t alphaRegValue = (ratio * 64 / 100) & 0x007F;
 	regModify(REG62_ALPHA, 0x007F, alphaRegValue);
 }
 
-uint8_t S1d13781::pipGetAlphaBlendRatio()
+uint8_t S1D13781::pipGetAlphaBlendRatio()
 {
 	return (regReadCached(REG62_ALPHA) & 0x007F) * 100 / 64;
 }
 
-void S1d13781::pipEnableTransparency(bool enable)
+void S1D13781::pipEnableTransparency(bool enable)
 {
 	if(enable) {
 		regSetBits(REG64_TRANS, 0x0001);
@@ -657,22 +657,22 @@ void S1d13781::pipEnableTransparency(bool enable)
 	}
 }
 
-bool S1d13781::pipGetTransparency()
+bool S1D13781::pipGetTransparency()
 {
 	return regReadCached(REG64_TRANS) ? true : false;
 }
 
-void S1d13781::pipSetTransColor(uint32_t xrgbColor)
+void S1D13781::pipSetTransColor(uint32_t xrgbColor)
 {
 	regWrite32(REG66_KEY_0, xrgbColor);
 }
 
-SeColor S1d13781::pipGetTransColor()
+SeColor S1D13781::pipGetTransColor()
 {
 	return regReadCached32(REG66_KEY_0);
 }
 
-void S1d13781::pipSetupWindow(uint16_t xPos, uint16_t yPos, uint16_t pipWidth, uint16_t pipHeight)
+void S1D13781::pipSetupWindow(uint16_t xPos, uint16_t yPos, uint16_t pipWidth, uint16_t pipHeight)
 {
 	//write the width and height of the PIP window
 	SeSize pipSize = {pipWidth, pipHeight};
@@ -697,27 +697,27 @@ static uint32_t getLutAddress(WindowDestination window, uint16_t index)
 	return addr + (index * 4);
 }
 
-void S1d13781::setLutEntry(WindowDestination window, uint16_t index, SeColor xrgbData)
+void S1D13781::setLutEntry(WindowDestination window, uint16_t index, SeColor xrgbData)
 {
 	memWriteWord32(getLutAddress(window, index), xrgbData);
 }
 
-uint32_t S1d13781::getLutEntry(WindowDestination window, uint16_t index)
+uint32_t S1D13781::getLutEntry(WindowDestination window, uint16_t index)
 {
 	return memReadWord32(getLutAddress(window, index));
 }
 
-void S1d13781::setLut(WindowDestination window, uint16_t startIndex, const SeColor* rgbData, uint16_t count)
+void S1D13781::setLut(WindowDestination window, uint16_t startIndex, const SeColor* rgbData, uint16_t count)
 {
 	memBurstWriteBytes(getLutAddress(window, startIndex), rgbData, count * 4);
 }
 
-void S1d13781::getLut(WindowDestination window, uint16_t startIndex, SeColor* rgbData, uint16_t count)
+void S1D13781::getLut(WindowDestination window, uint16_t startIndex, SeColor* rgbData, uint16_t count)
 {
 	memBurstReadBytes(getLutAddress(window, startIndex), rgbData, count * 4);
 }
 
-void S1d13781::setLutDefault(WindowDestination window)
+void S1D13781::setLutDefault(WindowDestination window)
 {
 	unsigned int lutSize;
 	unsigned int temp;
@@ -775,7 +775,7 @@ void S1d13781::setLutDefault(WindowDestination window)
 		regWrite(REG80_BLT_CTRL_0, 0x0001);                                                                            \
 	}
 
-bool S1d13781::bltSolidFill(WindowDestination window, SePos pos, SeSize size, SeColor color)
+bool S1D13781::bltSolidFill(WindowDestination window, SePos pos, SeSize size, SeColor color)
 {
 	uint16_t bytesPerPixel = getBytesPerPixel(window);
 	if(bytesPerPixel == 0) {
@@ -801,7 +801,7 @@ bool S1d13781::bltSolidFill(WindowDestination window, SePos pos, SeSize size, Se
 	return true;
 }
 
-bool S1d13781::bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos dstPos, SeSize dstSize, SeColor fgColor,
+bool S1D13781::bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos dstPos, SeSize dstSize, SeColor fgColor,
 							 SeColor bgColor)
 {
 	uint8_t bytesPerPixel = getBytesPerPixel(window);
@@ -828,7 +828,7 @@ bool S1d13781::bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos d
 	return true;
 }
 
-bool S1d13781::bltMove(WindowDestination window, BltCommand cmd, SePos srcPos, SePos dstPos, SeSize size)
+bool S1D13781::bltMove(WindowDestination window, BltCommand cmd, SePos srcPos, SePos dstPos, SeSize size)
 {
 	uint8_t bytesPerPixel = getBytesPerPixel(window);
 	if(bytesPerPixel == 0) {

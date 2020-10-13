@@ -1,6 +1,6 @@
 /* Acorn-like font definition, with PC graphics characters */
 
-#include "linux-fonts.h"
+#include "font-def.h"
 
 DEFINE_FONT(acorn_8x8,
 /* 00 */  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* ^@ */

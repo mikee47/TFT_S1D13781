@@ -9,7 +9,7 @@
 /*                                            */
 /**********************************************/
 
-#include "linux-fonts.h"
+#include "font-def.h"
 
 DEFINE_FONT(pearl_8x8,
    /* 0 0x00 '^@' */

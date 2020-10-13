@@ -1,4 +1,4 @@
-#include "linux-fonts.h"
+#include "font-def.h"
 
 DEFINE_FONT(6x10,
 	/* 0 0x00 '^@' */

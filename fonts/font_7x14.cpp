@@ -3,7 +3,7 @@
 /* by Jurriaan Kalkman 05-2005        */
 /**************************************/
 
-#include "linux-fonts.h"
+#include "font-def.h"
 
 DEFINE_FONT(7x14,
 	/* 0 0x00 '^@' */

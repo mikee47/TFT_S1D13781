@@ -1,7 +1,7 @@
 /** @brief Class to manipulate a rectangular buffer of pixels */
 #pragma once
 
-#include "SeColor.h"
+#include <S1D13781/SeColor.h>
 #include <debug_progmem.h>
 
 class PixelBuffer

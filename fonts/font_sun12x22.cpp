@@ -1,4 +1,4 @@
-#include "linux-fonts.h"
+#include "font-def.h"
 
 DEFINE_FONT(sun12x22,
 	/* 0 0x00 '^@' */

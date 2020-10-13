@@ -1,5 +1,5 @@
 /* ======================================================================
- * S1d13781_gfx.cpp
+ * S1D13781_gfx.cpp
  * Source file for S1D13781 Shield Graphics library
  * 
  * (C)SEIKO EPSON CORPORATION 2015. All rights reserved.
@@ -16,20 +16,20 @@
  * ======================================================================
  */
 
-#include "S1d13781_gfx.h"
-#include "S1d13781_registers.h"
+#include <S1D13781/gfx.h>
+#include <S1D13781/registers.h>
 #include "PixelBuffer.h"
 #include "BitBuffer.h"
 #include <stringutil.h>
 
 #define seSameSigns(A, B) (((A) >= 0) ^ ((B) < 0))
 
-uint16_t S1d13781_gfx::fillWindow(WindowDestination window, SeColor color)
+uint16_t S1D13781_gfx::fillWindow(WindowDestination window, SeColor color)
 {
 	return drawFilledRect(window, 0, 0, getWidth(window), getHeight(window), color);
 }
 
-uint16_t S1d13781_gfx::drawPixel(WindowDestination window, int x, int y, SeColor color, bool update_params)
+uint16_t S1D13781_gfx::drawPixel(WindowDestination window, int x, int y, SeColor color, bool update_params)
 {
 	static uint32_t vramAddress;   //video memory address
 	static uint16_t stride;		   //number of bytes in line
@@ -64,7 +64,7 @@ uint16_t S1d13781_gfx::drawPixel(WindowDestination window, int x, int y, SeColor
 	return 0;
 }
 
-SeColor S1d13781_gfx::getPixel(WindowDestination window, int x, int y)
+SeColor S1D13781_gfx::getPixel(WindowDestination window, int x, int y)
 {
 	SeSize size = getWindowSize(window);
 	//check that pixel coordinate is valid
@@ -87,7 +87,7 @@ SeColor S1d13781_gfx::getPixel(WindowDestination window, int x, int y)
 	return SeColor(value, format);
 }
 
-uint16_t S1d13781_gfx::drawLine(WindowDestination window, int x1, int y1, int x2, int y2, SeColor color)
+uint16_t S1D13781_gfx::drawLine(WindowDestination window, int x1, int y1, int x2, int y2, SeColor color)
 {
 	color = lookupColor(window, color);
 
@@ -177,7 +177,7 @@ uint16_t S1d13781_gfx::drawLine(WindowDestination window, int x1, int y1, int x2
 	return 0;
 }
 
-uint16_t S1d13781_gfx::drawRect(WindowDestination window, int xStart, int yStart, int width, int height, SeColor color)
+uint16_t S1D13781_gfx::drawRect(WindowDestination window, int xStart, int yStart, int width, int height, SeColor color)
 {
 	//	uint16_t stride;		//number of bytes in line
 	//	uint16_t bytesPerPixel; //number of bytes per pixel
@@ -194,7 +194,7 @@ uint16_t S1d13781_gfx::drawRect(WindowDestination window, int xStart, int yStart
 	return 0;
 }
 
-uint16_t S1d13781_gfx::drawFilledRectSlow(WindowDestination window, const SeRect& rect, SeColor color)
+uint16_t S1D13781_gfx::drawFilledRectSlow(WindowDestination window, const SeRect& rect, SeColor color)
 {
 	auto format = getColorDepth(window);
 	uint8_t bytesPerPixel = ::getBytesPerPixel(format);
@@ -231,7 +231,7 @@ uint16_t S1d13781_gfx::drawFilledRectSlow(WindowDestination window, const SeRect
 	return 0;
 }
 
-uint16_t S1d13781_gfx::drawPattern(WindowDestination window, PatternType pattern, uint8_t intensity)
+uint16_t S1D13781_gfx::drawPattern(WindowDestination window, PatternType pattern, uint8_t intensity)
 {
 	if(getBytesPerPixel(window) == 0) {
 		return 1; // invalid window
@@ -257,7 +257,7 @@ uint16_t S1d13781_gfx::drawPattern(WindowDestination window, PatternType pattern
 	return 0;
 }
 
-IntersectType S1d13781_gfx::_getIntersectionPoint(int AX1, int AY1, int AX2, int AY2, int BX1, int BY1, int BX2,
+IntersectType S1D13781_gfx::_getIntersectionPoint(int AX1, int AY1, int AX2, int AY2, int BX1, int BY1, int BX2,
 												  int BY2, int* intersectX, int* intersectY)
 {
 	long a1, a2, b1, b2, c1, c2; // Coefficients of line eqns.
@@ -308,7 +308,7 @@ IntersectType S1d13781_gfx::_getIntersectionPoint(int AX1, int AY1, int AX2, int
 	return intersect;
 }
 
-bool S1d13781_gfx::_cropLine(int* X1, int* Y1, int* X2, int* Y2, int cropRegionX, int cropRegionY, int cropRegionWidth,
+bool S1D13781_gfx::_cropLine(int* X1, int* Y1, int* X2, int* Y2, int cropRegionX, int cropRegionY, int cropRegionWidth,
 							 int cropRegionHeight)
 {
 	bool lineCropped = false;
@@ -370,7 +370,7 @@ bool S1d13781_gfx::_cropLine(int* X1, int* Y1, int* X2, int* Y2, int cropRegionX
 	return lineCropped;
 }
 
-void S1d13781_gfx::_drawRgbHorizBars(WindowDestination window, unsigned int intensity)
+void S1D13781_gfx::_drawRgbHorizBars(WindowDestination window, unsigned int intensity)
 {
 	SeRect r(getWindowSize(window));
 	r.height /= 3;
@@ -381,7 +381,7 @@ void S1d13781_gfx::_drawRgbHorizBars(WindowDestination window, unsigned int inte
 	drawFilledRect(window, r, scaleColor(aclBlue, intensity));
 }
 
-void S1d13781_gfx::_drawRgbHorizGradient(WindowDestination window)
+void S1D13781_gfx::_drawRgbHorizGradient(WindowDestination window)
 {
 	auto windowSize = getWindowSize(window);
 
@@ -417,7 +417,7 @@ void S1d13781_gfx::_drawRgbHorizGradient(WindowDestination window)
 	}
 }
 
-void S1d13781_gfx::_drawVertBars(WindowDestination window, unsigned int intensity)
+void S1D13781_gfx::_drawVertBars(WindowDestination window, unsigned int intensity)
 {
 	const uint32_t colors[] = {
 		aclWhite, aclYellow, aclCyan, aclGreen, aclMagenta, aclRed, aclBlue, aclBlack,
@@ -433,7 +433,7 @@ void S1d13781_gfx::_drawVertBars(WindowDestination window, unsigned int intensit
 	}
 }
 
-unsigned int S1d13781_gfx::drawTextTransparent(WindowDestination window, const SeFont& font, const char* text, int X,
+unsigned int S1D13781_gfx::drawTextTransparent(WindowDestination window, const SeFont& font, const char* text, int X,
 											   int Y, unsigned int width, SeColor fgColor, bool wordCrop, bool* cropped)
 {
 	// Optimise DrawPixel by caching parameters on first call
@@ -505,7 +505,7 @@ unsigned int S1d13781_gfx::drawTextTransparent(WindowDestination window, const S
  *
  * First step: Buffer full pixels and just use burst write, needs maximum 2400 bytes.
  */
-unsigned int S1d13781_gfx::drawText(WindowDestination window, const SeFont& font, const char* text, int X, int Y,
+unsigned int S1D13781_gfx::drawText(WindowDestination window, const SeFont& font, const char* text, int X, int Y,
 									unsigned int width, SeColor fgColor, SeColor bgColor, bool wordCrop, bool* cropped)
 {
 	if(bgColor == aclTransparent) {
@@ -588,7 +588,7 @@ unsigned int S1d13781_gfx::drawText(WindowDestination window, const SeFont& font
 	return nChars;
 }
 
-unsigned int S1d13781_gfx::drawMultiLineText(WindowDestination window, const SeFont& font, const char* text, int X,
+unsigned int S1D13781_gfx::drawMultiLineText(WindowDestination window, const SeFont& font, const char* text, int X,
 											 int Y, unsigned int width, SeColor fgColor, SeColor bgColor, bool wordCrop,
 											 bool* cropped, unsigned int* linesDrawn)
 {
@@ -618,7 +618,7 @@ unsigned int S1d13781_gfx::drawMultiLineText(WindowDestination window, const SeF
 }
 
 /*
-unsigned int S1d13781_gfx::drawMultiLineTextW(WindowDestination window, const SeFont& font, const wchar_t* text, int X,
+unsigned int S1D13781_gfx::drawMultiLineTextW(WindowDestination window, const SeFont& font, const wchar_t* text, int X,
 											  int Y, unsigned int width, SeColor fgColor, SeColor bgColor,
 											  bool wordCrop, bool* cropped, unsigned int* linesDrawn)
 {
@@ -649,7 +649,7 @@ unsigned int S1d13781_gfx::drawMultiLineTextW(WindowDestination window, const Se
 
 */
 
-void S1d13781_gfx::drawImage(const FlashString& image, WindowDestination window, int x, int y, unsigned imageWidth,
+void S1D13781_gfx::drawImage(const FlashString& image, WindowDestination window, int x, int y, unsigned imageWidth,
 							 unsigned imageHeight)
 {
 	unsigned xs = 1;
@@ -673,7 +673,7 @@ void S1d13781_gfx::drawImage(const FlashString& image, WindowDestination window,
 		image.read(y * imageStride, static_cast<char*>(sourceBuffer.getPtr()), imageStride);
 		for(unsigned x = 0; x < imageWidth; ++x) {
 			auto color = sourceBuffer.getPixel(x, 0);
-			color = bswap24(color);
+			color = HSPI::bswap24(color);
 			color = lookupColor(window, color);
 			for(unsigned i = 0; i < xs; ++i) {
 				destBuffer.setPixel((x * xs) + i, 0, color);
@@ -690,13 +690,13 @@ void S1d13781_gfx::drawImage(const FlashString& image, WindowDestination window,
 //TODO add to future versions of library
 
 /*
- uint16_t S1d13781_gfx::drawImage()
+ uint16_t S1D13781_gfx::drawImage()
  {
  ;
  }
  */
 
-uint16_t S1d13781_gfx::copyArea(WindowDestination srcWindow, WindowDestination destWindow, SeRect area, int destX,
+uint16_t S1D13781_gfx::copyArea(WindowDestination srcWindow, WindowDestination destWindow, SeRect area, int destX,
 								int destY)
 {
 	//check for invalid window error
@@ -718,7 +718,7 @@ uint16_t S1d13781_gfx::copyArea(WindowDestination srcWindow, WindowDestination d
 	}
 }
 
-uint16_t S1d13781_gfx::_bitBLTRegion(WindowDestination window, const SeRect& area, int destX, int destY)
+uint16_t S1D13781_gfx::_bitBLTRegion(WindowDestination window, const SeRect& area, int destX, int destY)
 {
 	// Check to see if regions are overlapping in a way that requires a reverse copy
 	BltCommand command;
@@ -736,7 +736,7 @@ uint16_t S1d13781_gfx::_bitBLTRegion(WindowDestination window, const SeRect& are
 	return bltMove(window, command, srcPos, dstPos, SeSize(area.width, area.height)) ? 0 : 1;
 }
 
-uint16_t S1d13781_gfx::_copyRegion(WindowDestination srcWindow, WindowDestination destWindow, SeRect area,
+uint16_t S1D13781_gfx::_copyRegion(WindowDestination srcWindow, WindowDestination destWindow, SeRect area,
 								   int16_t destX, int16_t destY)
 {
 	int16_t xStart = 0;

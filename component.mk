@@ -1,0 +1,3 @@
+COMPONENT_DEPENDS = HardwareSPI
+
+COMPONENT_SRCDIRS = src fonts

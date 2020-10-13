@@ -1,5 +1,5 @@
 /* ======================================================================
- * S1d13781_gfx.h
+ * S1D13781_gfx.h
  * Header file for S1D13781 Shield Graphics library
  * 
  * (C)SEIKO EPSON CORPORATION 2015. All rights reserved.
@@ -17,9 +17,9 @@
  */
 #pragma once
 
-#include "SeFont.h"
-#include "S1d13781.h"
-#include "SeColor.h"
+#include <S1D13781/SeFont.h>
+#include <S1D13781/driver.h>
+#include <S1D13781/SeColor.h>
 #include <algorithm>
 
 #define S1D13781_SHIELD_SWVERSION "S1D13781 Shield Graphics Library V1.0.2"
@@ -113,7 +113,7 @@ enum IntersectType {
 };
 
 // Graphics library functions
-class S1d13781_gfx : public S1d13781
+class S1D13781_gfx : public S1D13781
 {
 public:
 	/** @brief Fill the destination window with a specified color.
@@ -461,7 +461,7 @@ public:
 				   unsigned imageHeight);
 
 	//uint16_t drawImage();  //TODO add for future versions of library
-	//uint16_t copyArea(WindowDestination srcWindow, WindowDestination destWindow, S1d13781_gfx::seRect area, int destX, int destY);
+	//uint16_t copyArea(WindowDestination srcWindow, WindowDestination destWindow, S1D13781_gfx::seRect area, int destX, int destY);
 
 	/** @brief Copy a rectangular area to another area.
 	 *

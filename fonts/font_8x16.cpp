@@ -4,7 +4,7 @@
 /*                                            */
 /**********************************************/
 
-#include "linux-fonts.h"
+#include "font-def.h"
 
 DEFINE_FONT(8x16,
 	/* 0 0x00 '^@' */
