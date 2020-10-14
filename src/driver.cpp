@@ -107,7 +107,8 @@ S1D13781::~S1D13781()
 bool S1D13781::begin()
 {
 	spidev.setBitOrder(MSBFIRST);
-	spidev.setMode(HSPI::Mode0);
+	spidev.setClockMode(HSPI::ClockMode::Mode0);
+	spidev.setDataMode(HSPI::DataMode::HalfDuplex);
 	return initRegs();
 }
 
