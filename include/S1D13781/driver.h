@@ -275,7 +275,7 @@ public:
 	 * 						0, then no write is performed.
 	 *
 	 *
-	 * Note we cannot default this to asynchronous operation as the packet contrains a user-allocated buffer.
+	 * Note we cannot default this to asynchronous operation as the request contains a user-allocated buffer.
 	 */
 	void memBurstWriteBytes(uint32_t memAddress, const void* memValues, uint16_t count,
 							HSPI::Callback callback = nullptr, void* param = nullptr);
@@ -762,12 +762,12 @@ public:
 
 	bool readComplete()
 	{
-		return !inPacket.busy;
+		return !reqRd.busy;
 	}
 
 	bool writeComplete()
 	{
-		return !outPacket.busy;
+		return !reqWr.busy;
 	}
 
 private:
@@ -793,9 +793,9 @@ private:
 
 	HSPI::Device& spidev; ///< SPI device to talk to display
 
-	// Separate packets for IN/OUT allows one to be set up while the other is in flight
-	HSPI::Packet outPacket;
-	HSPI::Packet inPacket;
+	// Separate requests for IN/OUT allows one to be set up while the other is in flight
+	HSPI::Request reqWr;
+	HSPI::Request reqRd;
 
 	uint16_t* cache = nullptr; ///< Register cache
 	S1DTiming timing;

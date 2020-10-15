@@ -221,37 +221,37 @@ uint16_t S1D13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
 
 void S1D13781::memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t valueLen)
 {
-	outPacket.prepare();
-	outPacket.setCommand8(SPIWRITE_8BIT);
-	outPacket.setAddress24(memAddress);
-	outPacket.dummyLen = 0;
-	outPacket.out.set32(memValue, valueLen);
-	outPacket.in.clear();
-	outPacket.async = 1;
-	outPacket.callback = nullptr;
-	spidev.execute(outPacket);
+	reqWr.prepare();
+	reqWr.setCommand8(SPIWRITE_8BIT);
+	reqWr.setAddress24(memAddress);
+	reqWr.dummyLen = 0;
+	reqWr.out.set32(memValue, valueLen);
+	reqWr.in.clear();
+	reqWr.async = 1;
+	reqWr.callback = nullptr;
+	spidev.execute(reqWr);
 }
 
 uint32_t S1D13781::memReadWord32(uint32_t memAddress, uint8_t valueLen)
 {
-	inPacket.prepare();
-	inPacket.setCommand8(SPIREAD_8BIT);
-	inPacket.setAddress24(memAddress);
-	inPacket.dummyLen = 8;
-	inPacket.out.clear();
-	inPacket.in.set32(0, valueLen);
-	inPacket.async = 0;
-	inPacket.callback = nullptr;
-	spidev.execute(inPacket);
+	reqRd.prepare();
+	reqRd.setCommand8(SPIREAD_8BIT);
+	reqRd.setAddress24(memAddress);
+	reqRd.dummyLen = 8;
+	reqRd.out.clear();
+	reqRd.in.set32(0, valueLen);
+	reqRd.async = 0;
+	reqRd.callback = nullptr;
+	spidev.execute(reqRd);
 
-	//	debug_i("memReadWord(0x%06X) = 0x%08X", memAddress, packet.in.data32);
+	//	debug_i("memReadWord(0x%06X) = 0x%08X", memAddress, reqRd.in.data32);
 
 	/*
 	 * 8-bit
 	 * 16 1 0
 	 * 32 1 0 3 2
 	 */
-	return inPacket.in.data32;
+	return reqRd.in.data32;
 }
 
 void S1D13781::memBurstWriteBytes(uint32_t memAddress, const void* memValues, uint16_t count, HSPI::Callback callback,
@@ -271,31 +271,31 @@ void S1D13781::memBurstWriteBytes(uint32_t memAddress, const void* memValues, ui
 	}
 
 */
-	outPacket.prepare();
-	outPacket.setCommand8(SPIWRITE_8BIT);
-	outPacket.setAddress24(memAddress);
-	outPacket.dummyLen = 0;
-	outPacket.out.set(memValues, count);
-	outPacket.in.clear();
-	outPacket.async = (callback != nullptr);
-	outPacket.callback = callback;
-	outPacket.param = param;
-	spidev.execute(outPacket);
+	reqWr.prepare();
+	reqWr.setCommand8(SPIWRITE_8BIT);
+	reqWr.setAddress24(memAddress);
+	reqWr.dummyLen = 0;
+	reqWr.out.set(memValues, count);
+	reqWr.in.clear();
+	reqWr.async = (callback != nullptr);
+	reqWr.callback = callback;
+	reqWr.param = param;
+	spidev.execute(reqWr);
 }
 
 void S1D13781::memBurstReadBytes(uint32_t memAddress, void* memValues, uint16_t count, HSPI::Callback callback,
 								 void* param)
 {
-	inPacket.prepare();
-	inPacket.setCommand8(SPIREAD_8BIT);
-	inPacket.setAddress24(memAddress);
-	inPacket.dummyLen = 8;
-	inPacket.out.clear();
-	inPacket.in.set(memValues, count);
-	inPacket.async = (callback != nullptr);
-	inPacket.callback = callback;
-	inPacket.param = param;
-	spidev.execute(inPacket);
+	reqRd.prepare();
+	reqRd.setCommand8(SPIREAD_8BIT);
+	reqRd.setAddress24(memAddress);
+	reqRd.dummyLen = 8;
+	reqRd.out.clear();
+	reqRd.in.set(memValues, count);
+	reqRd.async = (callback != nullptr);
+	reqRd.callback = callback;
+	reqRd.param = param;
+	spidev.execute(reqRd);
 }
 
 void S1D13781::regWrite(uint8_t regIndex, uint16_t regValue)
