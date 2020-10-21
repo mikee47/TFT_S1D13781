@@ -227,7 +227,7 @@ void S1D13781::memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t va
 	reqWr.dummyLen = 0;
 	reqWr.out.set32(memValue, valueLen);
 	reqWr.in.clear();
-	reqWr.async = 1;
+	reqWr.async = true;
 	reqWr.callback = nullptr;
 	spidev.execute(reqWr);
 }
@@ -240,7 +240,7 @@ uint32_t S1D13781::memReadWord32(uint32_t memAddress, uint8_t valueLen)
 	reqRd.dummyLen = 8;
 	reqRd.out.clear();
 	reqRd.in.set32(0, valueLen);
-	reqRd.async = 0;
+	reqRd.async = false;
 	reqRd.callback = nullptr;
 	spidev.execute(reqRd);
 
