@@ -59,7 +59,7 @@ uint16_t S1D13781_gfx::drawPixel(WindowDestination window, int x, int y, SeColor
 	unsigned pixelOffset = vramAddress + (y * stride) + (x * bytesPerPixel);
 
 	//draw the pixel color according to image format
-	memWriteWord32(pixelOffset, lookupColor(window, color), bytesPerPixel);
+	writeWord(pixelOffset, lookupColor(window, color), bytesPerPixel);
 
 	return 0;
 }
@@ -83,7 +83,7 @@ SeColor S1D13781_gfx::getPixel(WindowDestination window, int x, int y)
 	//calculate the memory offset of the pixel
 	unsigned pixelOffset = getStartAddress(window) + (y * getStride(window)) + (x * bytesPerPixel);
 
-	uint32_t value = memReadWord32(pixelOffset, bytesPerPixel);
+	uint32_t value = readWord(pixelOffset, bytesPerPixel);
 	return SeColor(value, format);
 }
 
@@ -224,7 +224,7 @@ uint16_t S1D13781_gfx::drawFilledRectSlow(WindowDestination window, const SeRect
 	auto ptr = buffer.getPtr();
 	auto size = buffer.getSize();
 	while(r.height--) {
-		memBurstWriteBytes(addr, ptr, size);
+		write(addr, ptr, size);
 		addr += stride;
 	}
 
@@ -518,14 +518,14 @@ unsigned int S1D13781_gfx::drawText(WindowDestination window, const SeFont& font
 	// Determine how many characters to draw
 	unsigned nChars = font.measureText(text, displayWidth, wordCrop, cropped);
 	unsigned nCharsToDraw = nChars;
-//	while(nCharsToDraw > 0) {
-//		char c = text[nCharsToDraw - 1];
-//		if(c == ' ' || c == '\t' || c == '\r' || c == '\n') {
-//			--nCharsToDraw;
-//		} else {
-//			break;
-//		}
-//	}
+	//	while(nCharsToDraw > 0) {
+	//		char c = text[nCharsToDraw - 1];
+	//		if(c == ' ' || c == '\t' || c == '\r' || c == '\n') {
+	//			--nCharsToDraw;
+	//		} else {
+	//			break;
+	//		}
+	//	}
 
 	// Use a rect to maintain the position and size of the character being drawn
 	SeRect rcChar;
@@ -573,7 +573,7 @@ unsigned int S1D13781_gfx::drawText(WindowDestination window, const SeFont& font
 	//		buffer.print("T", vramAddress);
 
 	uint32_t srcAddr = S1D13781_LUT1_BASE - buffer.getPos();
-	memBurstWriteBytes(srcAddr, buffer.getPtr(), buffer.getPos());
+	write(srcAddr, buffer.getPtr(), buffer.getPos());
 
 	//	if(srcBufPos > srcBufSize) {
 	//		debug_e("SRCBUF OVERFLOW: %u, %u", srcBufPos, srcBufSize);
@@ -681,7 +681,7 @@ void S1D13781_gfx::drawImage(const FSTR::ObjectBase& image, WindowDestination wi
 		}
 
 		for(unsigned i = 0; i < ys; ++i) {
-			memBurstWriteBytes(vramAddress, destBuffer.getPtr(), destBuffer.getStride());
+			write(vramAddress, destBuffer.getPtr(), destBuffer.getStride());
 			vramAddress += windowStride;
 		}
 	}
@@ -803,9 +803,8 @@ uint16_t S1D13781_gfx::_copyRegion(WindowDestination srcWindow, WindowDestinatio
 
 		//now copy the image data
 		for(yCount = height, Y = yStart; yCount > 0; yCount--, Y += yInc) {
-			memBurstReadBytes(srcStartAddr + ((area.y + Y) * srcStride) + srcByteOffset, lineOfPixelData, rowCopyBytes);
-			memBurstWriteBytes(destStartAddr + ((destY + Y) * destStride) + destByteOffset, lineOfPixelData,
-							   rowCopyBytes);
+			read(srcStartAddr + ((area.y + Y) * srcStride) + srcByteOffset, lineOfPixelData, rowCopyBytes);
+			write(destStartAddr + ((destY + Y) * destStride) + destByteOffset, lineOfPixelData, rowCopyBytes);
 		}
 
 		delete[] lineOfPixelData;

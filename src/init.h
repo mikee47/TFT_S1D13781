@@ -19,11 +19,10 @@
 */
 #pragma once
 
-#include <FakePgmSpace.h>
+#include <FlashString/Array.hpp>
 
 /** @brief Defines the source input clock for the display */
 const uint32_t S1D13781_CLKI = 1000000UL;
-
 
 /*
  * S1D13781 register init sequence for Shield with 800x480@8bpp panel
@@ -35,11 +34,12 @@ const uint32_t S1D13781_CLKI = 1000000UL;
 const unsigned VRAM_SIZE = 0x60000;
 const unsigned MAIN_WIDTH = 800;
 const unsigned MAIN_HEIGHT = 480;
-const unsigned PIP_WIDTH = 128;//200;
-const unsigned PIP_HEIGHT = 72;//100;
+const unsigned PIP_WIDTH = 128; //200;
+const unsigned PIP_HEIGHT = 72; //100;
 const unsigned PIP_SADDR = VRAM_SIZE - (PIP_WIDTH * PIP_HEIGHT);
 
-static const SeSetting displaySettings[] PROGMEM = {
+// clang-format off
+DEFINE_FSTR_ARRAY(displaySettings, SeSetting,
 	{scRegWrite, REG06_RESET, 0x0100},
 	{scDelayOn, 0, 10000},
 	{scRegWrite, REG04_POWER_SAVE, 0x0000},
@@ -76,7 +76,8 @@ static const SeSetting displaySettings[] PROGMEM = {
 	{scRegWrite, REGD0_GPIO_CONFIG, 0x0000},
 	{scRegWrite, REGD2_GPIO_STATUS, 0x0000},
 	{scRegWrite, REGD4_GPIO_PULLDOWN, 0x000E},
-	{scRegWrite, REG04_POWER_SAVE, 0x0002}};
+	{scRegWrite, REG04_POWER_SAVE, 0x0002})
+// clang-format on
 
 /*
  * Example values for a typical 320x240 panel. Note these values may

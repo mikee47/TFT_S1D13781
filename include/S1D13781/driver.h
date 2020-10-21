@@ -17,7 +17,7 @@
 */
 #pragma once
 
-#include <HSPI/Device.h>
+#include <HSPI/MemoryDevice.h>
 #include "SeColor.h"
 
 const uint32_t S1D13781_LUT1_BASE = 0x060000;
@@ -129,17 +129,17 @@ enum BltCommand {
 };
 
 //base class with hardware accessor functions
-class S1D13781
+class S1D13781 : public HSPI::MemoryDevice
 {
 public:
-	S1D13781(HSPI::Device& dev);
+	S1D13781(HSPI::Controller& controller);
 	~S1D13781();
 
 	/** @brief This method should be run once to setup the SPI interface used by
 	 * 	the S1D13781 evaluation board and configure the registers.
 	 * 	Note that bus speed must already be configured.
 	 */
-	bool begin();
+	bool begin(HSPI::PinSet pinSet, uint8_t chipSelect);
 
 	// Direct register and memory access
 
@@ -182,12 +182,12 @@ public:
 	 */
 	uint16_t regRead(uint8_t regIndex)
 	{
-		return memReadWord32(S1D13781_REG_BASE + regIndex);
+		return readWord(S1D13781_REG_BASE + regIndex, 2);
 	}
 
 	uint32_t regRead32(uint8_t regIndex)
 	{
-		return memReadWord32(S1D13781_REG_BASE + regIndex);
+		return readWord(S1D13781_REG_BASE + regIndex, 4);
 	}
 
 	uint16_t regReadCached(uint8_t regIndex);
@@ -236,63 +236,6 @@ public:
 	 * - Returns the updated contents of the register.
 	 */
 	uint16_t regClearBits(uint8_t regIndex, uint16_t clearBits);
-
-	void memWriteByte(uint32_t memAddress, uint8_t memValue)
-	{
-		memWriteWord32(memAddress, memValue, 1);
-	}
-
-	uint8_t memReadByte(uint32_t memAddress)
-	{
-		return memReadWord32(memAddress, 1);
-	}
-
-	void memWriteWord(uint32_t memAddress, uint16_t memValue)
-	{
-		memWriteWord32(memAddress, memValue, 2);
-	}
-
-	uint16_t memReadWord(uint32_t memAddress)
-	{
-		return memReadWord32(memAddress, 2);
-	}
-
-	void memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t valueLen = sizeof(uint32_t));
-
-	uint32_t memReadWord32(uint32_t memAddress, uint8_t valueLen = sizeof(uint32_t));
-
-	/** @brief Burst write a specified number of byte (8-bit) values to the specified address offset in S1D13781 video memory.
-	 *  @note The memory address offset must be within valid memory space.
-	 *
-	 * param	memAddress	Memory offset into video memory starting from
-	 * 						address 0x00000000.
-	 *
-	 * param	memValues	A pointer to a buffer containing the byte values
-	 * 						(8-bit) to write to video memory. If the pointer
-	 * 						is nullptr, then no write is performed.
-	 *
-	 * param	count		The number of bytes to burst write. If count is
-	 * 						0, then no write is performed.
-	 *
-	 *
-	 * Note we cannot default this to asynchronous operation as the request contains a user-allocated buffer.
-	 */
-	void memBurstWriteBytes(uint32_t memAddress, const void* memValues, uint16_t count,
-							HSPI::Callback callback = nullptr, void* param = nullptr);
-
-	/** @brief Burst read a specified number of bytes from the specified address offset in S1D13781 video memory.
-	 *  @note The memory address offset must be within valid memory space.
-	 *
-	 * param	memAddress	Memory offset into video memory.
-	 *
-	 * param	memValues	A pointer to a buffer where video memory data will be placed.
-	 * 						If nullptr, then no reads are performed.
-	 *
-	 * param	count		Number of bytes to read. If 0, no reads are performed.
-	 *
-	 */
-	void memBurstReadBytes(unsigned int memAddress, void* memValues, uint16_t count, HSPI::Callback callback = nullptr,
-						   void* param = nullptr);
 
 	/** @brief Set the rotation of the main layer.
 	 *
@@ -760,15 +703,14 @@ public:
 		return 1000UL * ms / timing.frameInterval;
 	}
 
-	bool readComplete()
+	void writeWord(uint32_t address, uint32_t value, unsigned byteCount)
 	{
-		return !reqRd.busy;
+		MemoryDevice::writeWord(reqWr, address, value, byteCount);
 	}
 
-	bool writeComplete()
-	{
-		return !reqWr.busy;
-	}
+	// HSPI::MemoryDevice
+	void prepareWrite(HSPI::Request& req, uint32_t address) override;
+	void prepareRead(HSPI::Request& req, uint32_t address) override;
 
 private:
 	/** @brief Private method to initialize the S1D13781 registers
@@ -791,12 +733,9 @@ private:
 
 	// Member data
 
-	HSPI::Device& spidev; ///< SPI device to talk to display
-
-	// Separate requests for IN/OUT allows one to be set up while the other is in flight
+	// Small writes can be handle asynchronously
 	HSPI::Request reqWr;
-	HSPI::Request reqRd;
 
-	uint16_t* cache = nullptr; ///< Register cache
+	uint16_t* cache{nullptr}; ///< Register cache
 	S1DTiming timing;
 };

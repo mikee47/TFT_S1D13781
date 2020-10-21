@@ -94,7 +94,7 @@ struct __attribute__((packed)) SeBltParam {
 };
 #pragma pack()
 
-S1D13781::S1D13781(HSPI::Device& dev) : spidev(dev)
+S1D13781::S1D13781(HSPI::Controller& controller) : MemoryDevice(controller)
 {
 	cache = new uint16_t[CACHED_REG_COUNT];
 }
@@ -104,11 +104,15 @@ S1D13781::~S1D13781()
 	delete cache;
 }
 
-bool S1D13781::begin()
+bool S1D13781::begin(HSPI::PinSet pinSet, uint8_t chipSelect)
 {
-	spidev.setBitOrder(MSBFIRST);
-	spidev.setClockMode(HSPI::ClockMode::mode0);
-	spidev.setIoMode(HSPI::IoMode::SPIHD);
+	if(!MemoryDevice::begin(pinSet, chipSelect)) {
+		return false;
+	}
+
+	setBitOrder(MSBFIRST);
+	setClockMode(HSPI::ClockMode::mode0);
+	setIoMode(HSPI::IoMode::SPIHD);
 	return initRegs();
 }
 
@@ -133,12 +137,9 @@ void S1D13781::updateTiming()
 bool S1D13781::initRegs()
 {
 	// Initialise cache
-	memBurstReadBytes(S1D13781_REG_BASE + CACHED_REG_MIN, cache, CACHED_REG_COUNT * 2);
+	read(S1D13781_REG_BASE + CACHED_REG_MIN, cache, CACHED_REG_COUNT * 2);
 
-	for(unsigned i = 0; i < ARRAY_SIZE(displaySettings); ++i) {
-		SeSetting setting;
-		memcpy_P(&setting, &displaySettings[i], sizeof(setting));
-
+	for(auto setting : displaySettings) {
 		switch(setting.cmd) {
 		case scRegWrite:
 			regWrite(setting.regIndex, setting.value);
@@ -185,12 +186,10 @@ bool S1D13781::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, un
 	OneShotFastMs timer(timeoutMs);
 	do {
 		if((regRead(regIndex) & regMask) == regValue) {
-			//			debug_i("regWait, %u us", timer.elapsed());
 			return true;
 		}
 	} while(!timer.expired());
 
-	debug_i("regWait, timeout");
 	return false;
 }
 
@@ -219,89 +218,26 @@ uint16_t S1D13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
 	return regData;
 }
 
-void S1D13781::memWriteWord32(uint32_t memAddress, uint32_t memValue, uint8_t valueLen)
+void S1D13781::prepareWrite(HSPI::Request& req, uint32_t address)
 {
-	reqWr.prepare();
-	reqWr.setCommand8(SPIWRITE_8BIT);
-	reqWr.setAddress24(memAddress);
-	reqWr.dummyLen = 0;
-	reqWr.out.set32(memValue, valueLen);
-	reqWr.in.clear();
-	reqWr.async = true;
-	reqWr.callback = nullptr;
-	spidev.execute(reqWr);
+	req.prepare();
+	req.setCommand8(SPIWRITE_8BIT);
+	req.setAddress24(address);
+	req.dummyLen = 0;
 }
 
-uint32_t S1D13781::memReadWord32(uint32_t memAddress, uint8_t valueLen)
+void S1D13781::prepareRead(HSPI::Request& req, uint32_t address)
 {
-	reqRd.prepare();
-	reqRd.setCommand8(SPIREAD_8BIT);
-	reqRd.setAddress24(memAddress);
-	reqRd.dummyLen = 8;
-	reqRd.out.clear();
-	reqRd.in.set32(0, valueLen);
-	reqRd.async = false;
-	reqRd.callback = nullptr;
-	spidev.execute(reqRd);
-
-	//	debug_i("memReadWord(0x%06X) = 0x%08X", memAddress, reqRd.in.data32);
-
-	/*
-	 * 8-bit
-	 * 16 1 0
-	 * 32 1 0 3 2
-	 */
-	return reqRd.in.data32;
-}
-
-void S1D13781::memBurstWriteBytes(uint32_t memAddress, const void* memValues, uint16_t count, HSPI::Callback callback,
-								  void* param)
-{
-	//	debug_i("memBurstWriteBytes(0x%08x, 0x%08x, %u", memAddress, memValues, count);
-
-	/*
-	if(memAddress >= S1D13781_REG_BASE) {
-		debug_i("Bad address: 0x%08x", memAddress);
-		return; // Invalid address
-	}
-	if(memAddress + count > S1D13781_REG_BASE) {
-		debug_i("Bad address range: 0x%08x, %u", memAddress, count);
-		// Reduce write size to avoid overwriting register space
-		count = S1D13781_REG_BASE - memAddress;
-	}
-
-*/
-	reqWr.prepare();
-	reqWr.setCommand8(SPIWRITE_8BIT);
-	reqWr.setAddress24(memAddress);
-	reqWr.dummyLen = 0;
-	reqWr.out.set(memValues, count);
-	reqWr.in.clear();
-	reqWr.async = (callback != nullptr);
-	reqWr.callback = callback;
-	reqWr.param = param;
-	spidev.execute(reqWr);
-}
-
-void S1D13781::memBurstReadBytes(uint32_t memAddress, void* memValues, uint16_t count, HSPI::Callback callback,
-								 void* param)
-{
-	reqRd.prepare();
-	reqRd.setCommand8(SPIREAD_8BIT);
-	reqRd.setAddress24(memAddress);
-	reqRd.dummyLen = 8;
-	reqRd.out.clear();
-	reqRd.in.set(memValues, count);
-	reqRd.async = (callback != nullptr);
-	reqRd.callback = callback;
-	reqRd.param = param;
-	spidev.execute(reqRd);
+	req.prepare();
+	req.setCommand8(SPIREAD_8BIT);
+	req.setAddress24(address);
+	req.dummyLen = 8;
 }
 
 void S1D13781::regWrite(uint8_t regIndex, uint16_t regValue)
 {
 	debug_reg("regWrite(0x%02x, 0x%04x)", regIndex, regValue);
-	memWriteWord(S1D13781_REG_BASE + regIndex, regValue);
+	writeWord(S1D13781_REG_BASE + regIndex, regValue, 2);
 
 #ifdef CACHE_ENABLE
 	switch(regIndex) {
@@ -319,7 +255,7 @@ void S1D13781::regWrite(uint8_t regIndex, uint16_t regValue)
 void S1D13781::regWrite32(uint8_t regIndex, uint32_t regValue)
 {
 	debug_reg("regWrite32(0x%02x, 0x%08x)", regIndex, regValue);
-	memWriteWord32(S1D13781_REG_BASE + regIndex, regValue);
+	writeWord(S1D13781_REG_BASE + regIndex, regValue, 4);
 
 #ifdef CACHE_ENABLE
 	switch(regIndex) {
@@ -698,22 +634,22 @@ static uint32_t getLutAddress(WindowDestination window, uint16_t index)
 
 void S1D13781::setLutEntry(WindowDestination window, uint16_t index, SeColor xrgbData)
 {
-	memWriteWord32(getLutAddress(window, index), xrgbData);
+	writeWord(getLutAddress(window, index), xrgbData.value, 4);
 }
 
 uint32_t S1D13781::getLutEntry(WindowDestination window, uint16_t index)
 {
-	return memReadWord32(getLutAddress(window, index));
+	return readWord(getLutAddress(window, index), 4);
 }
 
 void S1D13781::setLut(WindowDestination window, uint16_t startIndex, const SeColor* rgbData, uint16_t count)
 {
-	memBurstWriteBytes(getLutAddress(window, startIndex), rgbData, count * 4);
+	write(getLutAddress(window, startIndex), rgbData, count * 4);
 }
 
 void S1D13781::getLut(WindowDestination window, uint16_t startIndex, SeColor* rgbData, uint16_t count)
 {
-	memBurstReadBytes(getLutAddress(window, startIndex), rgbData, count * 4);
+	read(getLutAddress(window, startIndex), rgbData, count * 4);
 }
 
 void S1D13781::setLutDefault(WindowDestination window)
@@ -770,7 +706,7 @@ void S1D13781::setLutDefault(WindowDestination window)
 #define bltExecute(blt)                                                                                                \
 	{                                                                                                                  \
 		regWaitForLow(REG84_BLT_STATUS, BIT(0), 1000);                                                                 \
-		memBurstWriteBytes(S1D13781_REG_BASE + REG80_BLT_CTRL_0, &blt, sizeof(blt));                                   \
+		write(S1D13781_REG_BASE + REG80_BLT_CTRL_0, &blt, sizeof(blt));                                                \
 		regWrite(REG80_BLT_CTRL_0, 0x0001);                                                                            \
 	}
 
