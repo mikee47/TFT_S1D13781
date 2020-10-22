@@ -16,8 +16,8 @@
  * ======================================================================
  */
 
-#include <S1D13781/gfx.h>
-#include <S1D13781/registers.h>
+#include "include/S1D13781/gfx.h"
+#include "include/S1D13781/registers.h"
 #include "PixelBuffer.h"
 #include "BitBuffer.h"
 #include <stringutil.h>

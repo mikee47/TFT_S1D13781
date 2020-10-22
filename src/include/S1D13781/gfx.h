@@ -17,9 +17,9 @@
  */
 #pragma once
 
-#include <S1D13781/SeFont.h>
-#include <S1D13781/driver.h>
-#include <S1D13781/SeColor.h>
+#include "SeFont.h"
+#include "driver.h"
+#include "SeColor.h"
 #include <algorithm>
 
 #define S1D13781_SHIELD_SWVERSION "S1D13781 Shield Graphics Library V1.0.2"

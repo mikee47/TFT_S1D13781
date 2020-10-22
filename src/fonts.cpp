@@ -1,4 +1,4 @@
-#include <S1D13781/fonts.h>
+#include "include/S1D13781/fonts.h"
 
 #define XX(name)                                                                                                       \
 	IMPORT_FSTR(name##IndexData, COMPONENT_PATH "/fonts/" #name ".pfi")                                                \

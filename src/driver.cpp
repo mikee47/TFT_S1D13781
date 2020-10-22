@@ -24,8 +24,8 @@
  *
  */
 
-#include <S1D13781/driver.h>
-#include <S1D13781/registers.h>
+#include "include/S1D13781/driver.h"
+#include "include/S1D13781/registers.h"
 #include "init.h"
 #include <Digital.h>
 #include <Clock.h>
