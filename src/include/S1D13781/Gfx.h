@@ -18,13 +18,15 @@
 #pragma once
 
 #include "SeFont.h"
-#include "driver.h"
+#include "Driver.h"
 #include "SeColor.h"
 #include <algorithm>
 
 #define S1D13781_SHIELD_SWVERSION "S1D13781 Shield Graphics Library V1.0.2"
 #define S1D13781_SHIELD_SWRELDATE "Nov 6, 2015"
 
+namespace S1D13781
+{
 struct SeRect {
 	int16_t x = 0;
 	int16_t y = 0;
@@ -113,10 +115,10 @@ enum IntersectType {
 };
 
 // Graphics library functions
-class S1D13781_gfx : public S1D13781
+class Gfx : public Driver
 {
 public:
-	using S1D13781::S1D13781;
+	using Driver::Driver;
 
 	/** @brief Fill the destination window with a specified color.
 	 *
@@ -130,9 +132,9 @@ public:
 	 * - 2 indicates invalid image format error.
 	 *
 	 */
-	uint16_t fillWindow(WindowDestination window, SeColor color);
+	uint16_t fillWindow(Window window, SeColor color);
 
-	uint16_t clearWindow(WindowDestination window)
+	uint16_t clearWindow(Window window)
 	{
 		return fillWindow(window, aclBlack);
 	}
@@ -162,7 +164,7 @@ public:
 	 * - 2 indicates coordinate out of window error.
 	 *
 	 */
-	uint16_t drawPixel(WindowDestination window, int x, int y, SeColor color, bool update_params);
+	uint16_t drawPixel(Window window, int x, int y, SeColor color, bool update_params);
 
 	/** @param Read the color value of a pixel at the specified x,y coordinates.
 	 *
@@ -182,7 +184,7 @@ public:
 	 * - 0xFD000000 - indicates invalid window image format error.
 	 *
 	 */
-	SeColor getPixel(WindowDestination window, int x, int y);
+	SeColor getPixel(Window window, int x, int y);
 
 	/** @param Draw a line between 2 specified x,y coordinates using the specified color.
 	 *
@@ -208,7 +210,7 @@ public:
 	 * - 1 indicates invalid window error.
 	 * - 2 indicates coordinate out of window error.
 	 */
-	uint16_t drawLine(WindowDestination window, int x1, int y1, int x2, int y2, SeColor color);
+	uint16_t drawLine(Window window, int x1, int y1, int x2, int y2, SeColor color);
 
 	/** @brief Draw a rectangle of a specified width,height starting at pixel coordinate x,y using the specified color.
 	 *
@@ -231,7 +233,7 @@ public:
 	 * - 1 indicates invalid window error.
 	 * - 2 indicates coordinate out of window error.
 	 */
-	uint16_t drawRect(WindowDestination window, int xStart, int yStart, int width, int height, SeColor color);
+	uint16_t drawRect(Window window, int xStart, int yStart, int width, int height, SeColor color);
 
 	/** Draw a filled rectangle of a specified width,height starting at pixel
 	 * coordinate x,y using the specified color. This function uses the BitBLT
@@ -258,11 +260,11 @@ public:
 	 * - 2 indicates invalid window format error.
 	 *
 	 */
-	uint16_t drawFilledRect(WindowDestination window, int xStart, int yStart, int width, int height, SeColor color)
+	uint16_t drawFilledRect(Window window, int xStart, int yStart, int width, int height, SeColor color)
 	{
 		return bltSolidFill(window, SePos(xStart, yStart), SeSize(width, height), color) ? 0 : 2;
 	}
-	uint16_t drawFilledRect(WindowDestination window, const SeRect& rect, SeColor color)
+	uint16_t drawFilledRect(Window window, const SeRect& rect, SeColor color)
 	{
 		return bltSolidFill(window, rect.getPos(), rect.getSize(), color) ? 0 : 2;
 	}
@@ -292,9 +294,8 @@ public:
 	 * - 2 indicates invalid window format error.
 	 *
 	 */
-	uint16_t drawFilledRectSlow(WindowDestination window, const SeRect& rect, SeColor color);
-	uint16_t drawFilledRectSlow(WindowDestination window, int xStart, int yStart, unsigned width, unsigned height,
-								SeColor color)
+	uint16_t drawFilledRectSlow(Window window, const SeRect& rect, SeColor color);
+	uint16_t drawFilledRectSlow(Window window, int xStart, int yStart, unsigned width, unsigned height, SeColor color)
 	{
 		return drawFilledRectSlow(window, SeRect(xStart, yStart, width, height), color);
 	}
@@ -322,7 +323,7 @@ public:
 	 * - 3 indicates invalid pattern error.
 	 *
 	 */
-	uint16_t drawPattern(WindowDestination window, PatternType pattern, uint8_t intensity);
+	uint16_t drawPattern(Window window, PatternType pattern, uint8_t intensity);
 
 	/** @brief Draw text containing "Chars" to the specified window using the given font.
 	 *
@@ -339,9 +340,9 @@ public:
 	 * return unsigned int The number of characters drawn (after cropping).
 	 *
 	 */
-	unsigned int drawText(WindowDestination window, const SeFont& font, const char* text, int X, int Y,
-						  unsigned int width, SeColor fgColor, SeColor bgColor, bool wordCrop, bool* cropped = nullptr);
-	unsigned int drawTextTransparent(WindowDestination window, const SeFont& font, const char* text, int X, int Y,
+	unsigned int drawText(Window window, const SeFont& font, const char* text, int X, int Y, unsigned int width,
+						  SeColor fgColor, SeColor bgColor, bool wordCrop, bool* cropped = nullptr);
+	unsigned int drawTextTransparent(Window window, const SeFont& font, const char* text, int X, int Y,
 									 unsigned int width, SeColor fgColor, bool wordCrop, bool* cropped = nullptr);
 
 	/** @brief Draw text containing "Wchars" to the specified window using the given font.
@@ -373,9 +374,8 @@ public:
 	 * @retval unsigned The number of characters drawn (after cropping).
 	 *
 	 */
-	unsigned int drawTextW(WindowDestination window, const SeFont& font, const wchar_t* text, int X, int Y,
-						   unsigned int width, SeColor fgColor, SeColor bgColor, bool wordCrop,
-						   bool* cropped = nullptr);
+	unsigned int drawTextW(Window window, const SeFont& font, const wchar_t* text, int X, int Y, unsigned int width,
+						   SeColor fgColor, SeColor bgColor, bool wordCrop, bool* cropped = nullptr);
 
 	/** @brief Draw multiple lines of text containing "Chars" to the specified window using the given font.
 	 *
@@ -410,7 +410,7 @@ public:
 	 * - The number of characters drawn (after cropping).
 	 *
 	 */
-	unsigned int drawMultiLineText(WindowDestination window, const SeFont& font, const char* text, int X, int Y,
+	unsigned int drawMultiLineText(Window window, const SeFont& font, const char* text, int X, int Y,
 								   unsigned int width, SeColor fgColor, SeColor bgColor, bool wordCrop,
 								   bool* cropped = nullptr, unsigned int* linesDrawn = nullptr);
 
@@ -447,7 +447,7 @@ public:
 	 * - The number of characters drawn (after cropping).
 	 *
 	 */
-	unsigned int drawMultiLineTextW(WindowDestination window, const SeFont& font, const wchar_t* text, int X, int Y,
+	unsigned int drawMultiLineTextW(Window window, const SeFont& font, const wchar_t* text, int X, int Y,
 									unsigned int width, SeColor fgColor, SeColor bgColor, bool wordCrop,
 									bool* cropped = nullptr, unsigned int* linesDrawn = nullptr);
 
@@ -459,7 +459,7 @@ public:
 	 *  @param imageWidth
 	 *  @param imageHeight
 	 */
-	void drawImage(const FSTR::ObjectBase& image, WindowDestination window, int x, int y, unsigned imageWidth,
+	void drawImage(const FSTR::ObjectBase& image, Window window, int x, int y, unsigned imageWidth,
 				   unsigned imageHeight);
 
 	//uint16_t drawImage();  //TODO add for future versions of library
@@ -484,7 +484,7 @@ public:
 	 * - Returns 3 if drawPixel error.
 	 *
 	 */
-	uint16_t copyArea(WindowDestination srcWindow, WindowDestination destWindow, SeRect area, int destX, int destY);
+	uint16_t copyArea(Window srcWindow, Window destWindow, SeRect area, int destX, int destY);
 
 private:
 	/** @brief Private Method used by the S1D13781 graphics library functions.
@@ -506,7 +506,7 @@ private:
 	 * - None.
 	 *
 	 */
-	void _drawRgbHorizBars(WindowDestination window, unsigned int intensity);
+	void _drawRgbHorizBars(Window window, unsigned int intensity);
 
 	/** @brief Draw a pattern of gradient horizontal RGB color bars.
 	 *
@@ -516,7 +516,7 @@ private:
 	 * - None.
 	 *
 	 */
-	void _drawRgbHorizGradient(WindowDestination window);
+	void _drawRgbHorizGradient(Window window);
 
 	/** @brief Draw a pattern of solid vertical color bars.
 	 *
@@ -531,7 +531,7 @@ private:
 	 * - None.
 	 *
 	 */
-	void _drawVertBars(WindowDestination window, unsigned int intensity);
+	void _drawVertBars(Window window, unsigned int intensity);
 
 	//void _copyImage
 
@@ -552,7 +552,7 @@ private:
 	 * - Returns 3 if drawPixel error.
 	 *
 	 */
-	uint16_t _bitBLTRegion(WindowDestination srcWindow, const SeRect& area, int destX, int destY);
+	uint16_t _bitBLTRegion(Window srcWindow, const SeRect& area, int destX, int destY);
 
 	/** @brief Copy a rectangular area to another area with color translation
 	 *
@@ -573,6 +573,7 @@ private:
 	 * - Returns 3 if drawPixel error.
 	 *
 	 */
-	uint16_t _copyRegion(WindowDestination srcWindow, WindowDestination destWindow, SeRect area, int16_t destX,
-						 int16_t destY);
+	uint16_t _copyRegion(Window srcWindow, Window destWindow, SeRect area, int16_t destX, int16_t destY);
 };
+
+} // namespace S1D13781

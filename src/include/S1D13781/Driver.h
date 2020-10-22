@@ -82,6 +82,8 @@ union SeSize {
 	}
 };
 
+namespace S1D13781
+{
 /** @brief Defines various clock parameters */
 struct S1DTiming {
 	uint8_t nCounter;
@@ -94,46 +96,46 @@ struct S1DTiming {
 };
 
 //possible destination windows
-enum WindowDestination {
-	window_Main,
-	window_Pip,
-	window_Invalid,
+enum class Window {
+	main,
+	pip,
+	invalid,
 };
 
 //possible modes for the PIP window
-enum PipEffect {
+enum class PipEffect {
 	/** Stops the PIP from being displayed immediately */
-	pipDisabled,
+	disabld,
 	/** Causes the PIP to be displayed immediately. The PIP will be displayed with the
 	 * currently set alpha blending mode. If the alpha blending ratio is changed while
 	 * the PIP is displayed the effect will take place on the next frame. */
-	pipNormal,
+	normal,
 	/** PIP layer toggles between the set alpha blend mode and no PIP. */
-	pipBlink1,
+	blink1,
 	/** PIP layer toggles between normal and invert. Alpha blend ratio remains constant. */
-	pipBlink2,
+	blink2,
 	/** Causes the PIP to fade from the current alpha blend value to 0x0000 (blank) */
-	pipFadeOut,
+	fadeOut,
 	/** Causes the PIP layer to fade from 0x0000 to the set alpha blend ratio */
-	pipFadeIn,
+	fadeIn,
 	/* Cycles between alpha blend 0x0000 and the current set alpha blend value. */
-	pipContinous
+	continuous,
 };
 
-enum BltCommand {
-	bltcmd_MovePositive, ///< Copy rectangular area in VRAM, new address > old address
-	bltcmd_MoveNegative, ///< Copy rectangular area in VRAM, new address < old address
-	bltcmd_SolidFill,	///< Fill rectangular area
-	bltcmd_Reserved03,
-	bltcmd_MoveExpand, ///< Copy area bits expanding to current foreground/background colours
+enum class BltCmd : uint16_t {
+	movePositive, ///< Copy rectangular area in VRAM, new address > old address
+	moveNegative, ///< Copy rectangular area in VRAM, new address < old address
+	solidFill,	///< Fill rectangular area
+	reserved03,
+	moveExpand, ///< Copy area bits expanding to current foreground/background colours
 };
 
 //base class with hardware accessor functions
-class S1D13781 : public HSPI::MemoryDevice
+class Driver : public HSPI::MemoryDevice
 {
 public:
-	S1D13781(HSPI::Controller& controller);
-	~S1D13781();
+	Driver(HSPI::Controller& controller);
+	~Driver();
 
 	/** @brief This method should be run once to setup the SPI interface used by
 	 * 	the S1D13781 evaluation board and configure the registers.
@@ -243,7 +245,7 @@ public:
 	 * 								Acceptable values (0, 90, 180, 270)
 	 *
 	 */
-	void setRotation(WindowDestination window, uint16_t rotationDegress);
+	void setRotation(Window window, uint16_t rotationDegress);
 
 	/** @brief Get the current rotation of the main layer.
 	 *
@@ -251,25 +253,25 @@ public:
 	 * - current counter-clockwise rotation in degrees (0, 90, 180, 270)
 	 *
 	 */
-	uint16_t getRotation(WindowDestination window);
+	uint16_t getRotation(Window window);
 
 	/** @brief Set the color depth of a window
 	 *
 	 * @param colorDepth
 	 */
-	void setColorDepth(WindowDestination window, ImageDataFormat colorDepth);
+	void setColorDepth(Window window, ImageDataFormat colorDepth);
 
 	/** @brief Get the current color depth of the main layer.
 	 *
 	 * @retval ImageDataFormat current color depth
 	 */
-	ImageDataFormat getColorDepth(WindowDestination window);
+	ImageDataFormat getColorDepth(Window window);
 
 	/** @brief Get the number of bytes used per pixel based on the main layer color depth.
 	 *
 	 * @retval number of bytes per pixel (possible: 1, 2, or 3; 0 if window is invalid)
 	 */
-	uint8_t getBytesPerPixel(WindowDestination window)
+	uint8_t getBytesPerPixel(Window window)
 	{
 		return ::getBytesPerPixel(getColorDepth(window));
 	}
@@ -279,7 +281,7 @@ public:
 	 *
 	 * @param lcdStartAddress Offset, in bytes, into display memory where the layer image starts
 	 */
-	void setStartAddress(WindowDestination window, uint32_t lcdStartAddress);
+	void setStartAddress(Window window, uint32_t lcdStartAddress);
 
 	/** @brief Get the video memory start address for a window.
 	 *  @note The start address must be 32-bit aligned (must be divisible by 4).
@@ -287,9 +289,9 @@ public:
 	 * @retval uint32_t the layer image start address.
 	 *
 	*/
-	uint32_t getStartAddress(WindowDestination window);
-	uint32_t getAddress(WindowDestination window, uint16_t x, uint16_t y);
-	uint32_t getAddress(WindowDestination window, SePos pos)
+	uint32_t getStartAddress(Window window);
+	uint32_t getAddress(Window window, uint16_t x, uint16_t y);
+	uint32_t getAddress(Window window, SePos pos)
 	{
 		return getAddress(window, pos.x, pos.y);
 	}
@@ -313,7 +315,7 @@ public:
 	 * param width in pixels
 	 *
 	*/
-	void setWidth(WindowDestination window, uint16_t width);
+	void setWidth(Window window, uint16_t width);
 
 	/** @brief Get the width of a window, accounting for rotation
 	 * @note
@@ -326,7 +328,7 @@ public:
 	 * - width of the window in pixels
 	 *
 	*/
-	uint16_t getWidth(WindowDestination window);
+	uint16_t getWidth(Window window);
 
 	/** @brief Set the height of a window in pixels
 	 *  @note For the main window, this sets the physical LCD height regardless of rotation
@@ -334,7 +336,7 @@ public:
 	 * param	height	height of the window, in lines (pixels)
 	 *
 	 */
-	void setHeight(WindowDestination window, uint16_t height);
+	void setHeight(Window window, uint16_t height);
 
 	/** @brief Get the height of a window, accounting for rotation
 	 * @note
@@ -347,9 +349,9 @@ public:
 	 * - height of the window in pixels
 	 *
 	*/
-	uint16_t getHeight(WindowDestination window);
+	uint16_t getHeight(Window window);
 
-	SeSize getWindowSize(WindowDestination window);
+	SeSize getWindowSize(Window window);
 
 	/** @brief Get the window stride, in bytes
 	 *  @note
@@ -361,7 +363,7 @@ public:
 	 * - Main Layer stride, in bytes
 	 *
 	*/
-	uint16_t getStride(WindowDestination window);
+	uint16_t getStride(Window window);
 
 	//pip layer functions
 
@@ -568,8 +570,8 @@ public:
 	 * For details, refer to the specification on LUT Architecture
 	 *
 	 * WindowDestination is either:
-	 * - window_Main uses LUT1 at address 0x00060000
-	 * - window_Pip uses LUT2 at address 0x00060400
+	 * - Window::main uses LUT1 at address 0x00060000
+	 * - Window::pip uses LUT2 at address 0x00060400
 	 *
 	 * xrgbData is defined as:
 	 *   - bits 31-24 = unused
@@ -586,11 +588,11 @@ public:
 	 * param	xrgbData	the data to write to the LUT index
 	 *
 	 * param	window		which LUT to access:
-	 * 						- window_Main will access LUT1
-	 * 						- window_Pip will access LUT2
+	 * 						- Window::main will access LUT1
+	 * 						- Window::pip will access LUT2
 	 *
 	*/
-	void setLutEntry(WindowDestination window, uint16_t index, SeColor rgbData);
+	void setLutEntry(Window window, uint16_t index, SeColor rgbData);
 
 	/** @brief Get a specific LUT entry value.
 	 *
@@ -601,37 +603,37 @@ public:
 	 * - the data from the specified LUT entry
 	 *
 	*/
-	unsigned int getLutEntry(WindowDestination window, uint16_t index);
+	unsigned int getLutEntry(Window window, uint16_t index);
 
 	/** @brief Setup a LUT
 	 * @todo
 	*/
-	void setLut(WindowDestination window, uint16_t startIndex, const SeColor* rgbData, uint16_t count);
+	void setLut(Window window, uint16_t startIndex, const SeColor* rgbData, uint16_t count);
 
 	/** @brief Get a set of LUT values
 	 * @todo
 	*/
-	void getLut(WindowDestination window, uint16_t startIndex, SeColor* rgbData, uint16_t count);
+	void getLut(Window window, uint16_t startIndex, SeColor* rgbData, uint16_t count);
 
 	/** @brief Set the LUTs with default values.
 	 * @note
 	 * For details, refer to the specification on LUT Architecture
 	 *
 	 * WindowDestination is either:
-	 * - window_Main uses LUT1 at address 0x00060000
-	 * - window_Pip uses LUT2 at address 0x00060400
+	 * - Window::main uses LUT1 at address 0x00060000
+	 * - Window::pip uses LUT2 at address 0x00060400
 	 *
 	 * param	window		determines whether LUT1 or LUT2 is set
 	 *
 	 */
-	void setLutDefault(WindowDestination window);
+	void setLutDefault(Window window);
 
 	/** @brief Return the mapped colour code for the given RGB value
 	 * 	@param rgb
 	 * 	@retval uint32_t mapped colour code
 	 * 	@note for LUT colour spaces we map the code here
 	 */
-	SeColor lookupColor(WindowDestination window, SeColor color)
+	SeColor lookupColor(Window window, SeColor color)
 	{
 		/*
 		 * @todo For LUT modes this should reflect the inverse mapping of setLutDefault().
@@ -640,15 +642,14 @@ public:
 		return RGBColor(color).getColor(getColorDepth(window));
 	}
 
-	bool bltSolidFill(WindowDestination window, SePos pos, SeSize size, SeColor color);
-	bool bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos dstPos, SeSize dstSize, SeColor fgColor,
-					   SeColor bgColor);
-	bool bltMove(WindowDestination window, BltCommand cmd, SePos srcPos, SePos dstPos, SeSize size);
+	bool bltSolidFill(Window window, SePos pos, SeSize size, SeColor color);
+	bool bltMoveExpand(Window window, uint32_t srcAddr, SePos dstPos, SeSize dstSize, SeColor fgColor, SeColor bgColor);
+	bool bltMove(Window window, BltCmd cmd, SePos srcPos, SePos dstPos, SeSize size);
 
-	void scrollUp(WindowDestination window, unsigned lineCount, SeColor bgColor)
+	void scrollUp(Window window, unsigned lineCount, SeColor bgColor)
 	{
 		auto size = getWindowSize(window);
-		bltMove(window, bltcmd_MovePositive, SePos(0, lineCount), SePos(0, 0),
+		bltMove(window, BltCmd::movePositive, SePos(0, lineCount), SePos(0, 0),
 				SeSize(size.width, size.height - lineCount));
 		bltSolidFill(window, SePos(0, size.height - lineCount), SeSize(size.width, lineCount), bgColor);
 	}
@@ -729,7 +730,7 @@ private:
 	/** @brief Calculate and store commonly used timing values */
 	void updateTiming();
 
-	bool regReadWindow(WindowDestination window, uint16_t& value);
+	bool regReadWindow(Window window, uint16_t& value);
 
 	// Member data
 
@@ -739,3 +740,5 @@ private:
 	uint16_t* cache{nullptr}; ///< Register cache
 	S1DTiming timing;
 };
+
+} // namespace S1D13781

@@ -24,13 +24,15 @@
  *
  */
 
-#include "include/S1D13781/driver.h"
+#include "include/S1D13781/Driver.h"
 #include "include/S1D13781/registers.h"
 #include "init.h"
 #include <Digital.h>
 #include <Clock.h>
 #include <Platform/Timers.h>
 
+namespace S1D13781
+{
 // S1D13781 SPI Commands
 const uint8_t SPIWRITE_8BIT = 0x80;
 const uint8_t SPIREAD_8BIT = 0xC0;
@@ -83,7 +85,7 @@ struct __attribute__((packed)) SeBltParam {
 	uint16_t ctrl0;
 	uint16_t ctrl1;
 	uint16_t status;
-	uint16_t cmd; // BltCommand
+	BltCmd cmd;
 	uint32_t ssAddr;
 	uint32_t dsAddr;
 	uint16_t rectOffset;
@@ -94,17 +96,17 @@ struct __attribute__((packed)) SeBltParam {
 };
 #pragma pack()
 
-S1D13781::S1D13781(HSPI::Controller& controller) : MemoryDevice(controller)
+Driver::Driver(HSPI::Controller& controller) : MemoryDevice(controller)
 {
 	cache = new uint16_t[CACHED_REG_COUNT];
 }
 
-S1D13781::~S1D13781()
+Driver::~Driver()
 {
 	delete cache;
 }
 
-bool S1D13781::begin(HSPI::PinSet pinSet, uint8_t chipSelect)
+bool Driver::begin(HSPI::PinSet pinSet, uint8_t chipSelect)
 {
 	if(!MemoryDevice::begin(pinSet, chipSelect)) {
 		return false;
@@ -116,7 +118,7 @@ bool S1D13781::begin(HSPI::PinSet pinSet, uint8_t chipSelect)
 	return initRegs();
 }
 
-void S1D13781::updateTiming()
+void Driver::updateTiming()
 {
 	uint16_t reg12 = regReadCached(REG12_PLL_1);
 	timing.nCounter = (reg12 >> 10) & 0x0F;
@@ -134,7 +136,7 @@ void S1D13781::updateTiming()
 	timing.frameInterval = 1000UL * (hdisp + hndp) * (vdisp + vndp) / (timing.pclk / 1000UL);
 }
 
-bool S1D13781::initRegs()
+bool Driver::initRegs()
 {
 	// Initialise cache
 	read(S1D13781_REG_BASE + CACHED_REG_MIN, cache, CACHED_REG_COUNT * 2);
@@ -181,7 +183,7 @@ bool S1D13781::initRegs()
 	return true;
 }
 
-bool S1D13781::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, unsigned int timeoutMs)
+bool Driver::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, unsigned int timeoutMs)
 {
 	OneShotFastMs timer(timeoutMs);
 	do {
@@ -193,7 +195,7 @@ bool S1D13781::regWait(uint8_t regIndex, uint16_t regMask, uint16_t regValue, un
 	return false;
 }
 
-uint16_t S1D13781::regModify(uint8_t regIndex, uint16_t clearBits, uint16_t setBits)
+uint16_t Driver::regModify(uint8_t regIndex, uint16_t clearBits, uint16_t setBits)
 {
 	uint16_t regData = regReadCached(regIndex);
 	regData &= ~clearBits;
@@ -202,7 +204,7 @@ uint16_t S1D13781::regModify(uint8_t regIndex, uint16_t clearBits, uint16_t setB
 	return regData;
 }
 
-uint16_t S1D13781::regSetBits(uint8_t regIndex, uint16_t setBits)
+uint16_t Driver::regSetBits(uint8_t regIndex, uint16_t setBits)
 {
 	uint16_t regData = regReadCached(regIndex);
 	regData |= setBits;
@@ -210,7 +212,7 @@ uint16_t S1D13781::regSetBits(uint8_t regIndex, uint16_t setBits)
 	return regData;
 }
 
-uint16_t S1D13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
+uint16_t Driver::regClearBits(uint8_t regIndex, uint16_t clearBits)
 {
 	uint16_t regData = regReadCached(regIndex);
 	regData &= ~clearBits;
@@ -218,7 +220,7 @@ uint16_t S1D13781::regClearBits(uint8_t regIndex, uint16_t clearBits)
 	return regData;
 }
 
-void S1D13781::prepareWrite(HSPI::Request& req, uint32_t address)
+void Driver::prepareWrite(HSPI::Request& req, uint32_t address)
 {
 	req.prepare();
 	req.setCommand8(SPIWRITE_8BIT);
@@ -226,7 +228,7 @@ void S1D13781::prepareWrite(HSPI::Request& req, uint32_t address)
 	req.dummyLen = 0;
 }
 
-void S1D13781::prepareRead(HSPI::Request& req, uint32_t address)
+void Driver::prepareRead(HSPI::Request& req, uint32_t address)
 {
 	req.prepare();
 	req.setCommand8(SPIREAD_8BIT);
@@ -234,7 +236,7 @@ void S1D13781::prepareRead(HSPI::Request& req, uint32_t address)
 	req.dummyLen = 8;
 }
 
-void S1D13781::regWrite(uint8_t regIndex, uint16_t regValue)
+void Driver::regWrite(uint8_t regIndex, uint16_t regValue)
 {
 	debug_reg("regWrite(0x%02x, 0x%04x)", regIndex, regValue);
 	writeWord(S1D13781_REG_BASE + regIndex, regValue, 2);
@@ -252,7 +254,7 @@ void S1D13781::regWrite(uint8_t regIndex, uint16_t regValue)
 #endif
 }
 
-void S1D13781::regWrite32(uint8_t regIndex, uint32_t regValue)
+void Driver::regWrite32(uint8_t regIndex, uint32_t regValue)
 {
 	debug_reg("regWrite32(0x%02x, 0x%08x)", regIndex, regValue);
 	writeWord(S1D13781_REG_BASE + regIndex, regValue, 4);
@@ -271,7 +273,7 @@ void S1D13781::regWrite32(uint8_t regIndex, uint32_t regValue)
 #endif
 }
 
-uint16_t S1D13781::regReadCached(uint8_t regIndex)
+uint16_t Driver::regReadCached(uint8_t regIndex)
 {
 	uint16_t value;
 #ifdef CACHE_ENABLE
@@ -292,7 +294,7 @@ uint16_t S1D13781::regReadCached(uint8_t regIndex)
 	return value;
 }
 
-uint32_t S1D13781::regReadCached32(uint8_t regIndex)
+uint32_t Driver::regReadCached32(uint8_t regIndex)
 {
 	uint32_t value;
 #ifdef CACHE_ENABLE
@@ -319,18 +321,18 @@ uint32_t S1D13781::regReadCached32(uint8_t regIndex)
  * ===================================================================== 
 */
 
-static __forceinline uint8_t regSelect(WindowDestination window, uint8_t regMain, uint8_t regPip)
+static __forceinline uint8_t regSelect(Window window, uint8_t regMain, uint8_t regPip)
 {
-	if(window == window_Main) {
+	if(window == Window::main) {
 		return regMain;
-	} else if(window == window_Pip) {
+	} else if(window == Window::pip) {
 		return regPip;
 	} else {
 		return 0;
 	}
 }
 
-void S1D13781::setRotation(WindowDestination window, uint16_t rotationDegrees)
+void Driver::setRotation(Window window, uint16_t rotationDegrees)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	if(reg) {
@@ -338,13 +340,13 @@ void S1D13781::setRotation(WindowDestination window, uint16_t rotationDegrees)
 	}
 }
 
-uint16_t S1D13781::getRotation(WindowDestination window)
+uint16_t Driver::getRotation(Window window)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	return reg ? (regReadCached(reg) >> 3) * 90 : 0;
 }
 
-void S1D13781::setColorDepth(WindowDestination window, ImageDataFormat colorDepth)
+void Driver::setColorDepth(Window window, ImageDataFormat colorDepth)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	if(reg) {
@@ -352,13 +354,13 @@ void S1D13781::setColorDepth(WindowDestination window, ImageDataFormat colorDept
 	}
 }
 
-ImageDataFormat S1D13781::getColorDepth(WindowDestination window)
+ImageDataFormat Driver::getColorDepth(Window window)
 {
 	auto reg = regSelect(window, REG40_MAIN_SET, REG50_PIP_SET);
 	return ImageDataFormat(regReadCached(reg) & 0x0007);
 }
 
-void S1D13781::setStartAddress(WindowDestination window, uint32_t lcdStartAddress)
+void Driver::setStartAddress(Window window, uint32_t lcdStartAddress)
 {
 	auto reg = regSelect(window, REG42_MAIN_SADDR_0, REG52_PIP_SADDR_0);
 	if(reg) {
@@ -366,13 +368,13 @@ void S1D13781::setStartAddress(WindowDestination window, uint32_t lcdStartAddres
 	}
 }
 
-uint32_t S1D13781::getStartAddress(WindowDestination window)
+uint32_t Driver::getStartAddress(Window window)
 {
 	auto reg = regSelect(window, REG42_MAIN_SADDR_0, REG52_PIP_SADDR_0);
 	return reg ? regReadCached32(reg) : 0xFFFFFFFF;
 }
 
-uint32_t S1D13781::getAddress(WindowDestination window, uint16_t x, uint16_t y)
+uint32_t Driver::getAddress(Window window, uint16_t x, uint16_t y)
 {
 	uint32_t addr = getStartAddress(window);
 	if(int(addr) >= 0) {
@@ -381,31 +383,31 @@ uint32_t S1D13781::getAddress(WindowDestination window, uint16_t x, uint16_t y)
 	return addr;
 }
 
-uint16_t S1D13781::getDisplayWidth()
+uint16_t Driver::getDisplayWidth()
 {
 	return regReadCached(REG24_HDISP) * 8;
 }
 
-uint16_t S1D13781::getDisplayHeight()
+uint16_t Driver::getDisplayHeight()
 {
 	return regReadCached(REG28_VDISP);
 }
 
-void S1D13781::setWidth(WindowDestination window, uint16_t width)
+void Driver::setWidth(Window window, uint16_t width)
 {
-	if(window == window_Pip) {
+	if(window == Window::pip) {
 		regWrite(REG56_PIP_WIDTH, width);
-	} else if(window == window_Main) {
+	} else if(window == Window::main) {
 		regWrite(REG24_HDISP, width / 8);
 	}
 }
 
-uint16_t S1D13781::getWidth(WindowDestination window)
+uint16_t Driver::getWidth(Window window)
 {
 	uint16_t width = 0;
-	if(window == window_Pip) {
+	if(window == Window::pip) {
 		width = regReadCached(REG56_PIP_WIDTH);
-	} else if(window == window_Main) {
+	} else if(window == Window::main) {
 		auto rotation = getRotation(window);
 		if(rotation == 90 || rotation == 270) {
 			width = getDisplayHeight();
@@ -416,7 +418,7 @@ uint16_t S1D13781::getWidth(WindowDestination window)
 	return width;
 }
 
-void S1D13781::setHeight(WindowDestination window, uint16_t height)
+void Driver::setHeight(Window window, uint16_t height)
 {
 	auto reg = regSelect(window, REG28_VDISP, REG58_PIP_HEIGHT);
 	if(reg) {
@@ -424,12 +426,12 @@ void S1D13781::setHeight(WindowDestination window, uint16_t height)
 	}
 }
 
-uint16_t S1D13781::getHeight(WindowDestination window)
+uint16_t Driver::getHeight(Window window)
 {
 	uint16_t height = 0;
-	if(window == window_Pip) {
+	if(window == Window::pip) {
 		height = regReadCached(REG58_PIP_HEIGHT);
-	} else if(window == window_Main) {
+	} else if(window == Window::main) {
 		auto rotation = getRotation(window);
 		if(rotation == 90 || rotation == 270) {
 			height = getDisplayWidth();
@@ -440,12 +442,12 @@ uint16_t S1D13781::getHeight(WindowDestination window)
 	return height;
 }
 
-SeSize S1D13781::getWindowSize(WindowDestination window)
+SeSize Driver::getWindowSize(Window window)
 {
 	SeSize size;
-	if(window == window_Pip) {
+	if(window == Window::pip) {
 		size.val = regReadCached32(REG56_PIP_WIDTH);
-	} else if(window == window_Main) {
+	} else if(window == Window::main) {
 		size.width = getDisplayWidth();
 		size.height = getDisplayHeight();
 	} else {
@@ -460,7 +462,7 @@ SeSize S1D13781::getWindowSize(WindowDestination window)
 	return size;
 }
 
-uint16_t S1D13781::getStride(WindowDestination window)
+uint16_t Driver::getStride(Window window)
 {
 	return getWidth(window) * getBytesPerPixel(window);
 }
@@ -471,30 +473,30 @@ uint16_t S1D13781::getStride(WindowDestination window)
  * ===================================================================== 
 */
 
-void S1D13781::pipSetDisplayMode(PipEffect newEffect)
+void Driver::pipSetDisplayMode(PipEffect newEffect)
 {
 	//check whether the effect needs to finish first
 	PipEffect currentEffect = pipGetDisplayMode();
 	switch(currentEffect) {
-	case pipFadeIn:
-	case pipFadeOut:
-	case pipContinous:
+	case PipEffect::fadeIn:
+	case PipEffect::fadeOut:
+	case PipEffect::continuous:
 		pipWaitForFade(250);
 		break;
 	default:;
 	}
 
-	regModify(REG60_PIP_EN, 0x0007, newEffect & 0x0007);
+	regModify(REG60_PIP_EN, 0x0007, unsigned(newEffect) & 0x0007);
 }
 
-PipEffect S1D13781::pipGetDisplayMode()
+PipEffect Driver::pipGetDisplayMode()
 {
 	return PipEffect(regReadCached(REG60_PIP_EN) & 0x0007);
 }
 
-bool S1D13781::pipIsOrthogonal()
+bool Driver::pipIsOrthogonal()
 {
-	return getRotation(window_Main) == getRotation(window_Pip);
+	return getRotation(Window::main) == getRotation(Window::pip);
 }
 
 /** @brief Rotate a point within a window based on its rotation setting */
@@ -519,40 +521,40 @@ static void rotatePos(SePos& pos, const SeSize size, uint16_t degrees)
 	}
 }
 
-void S1D13781::pipSetPosition(SePos pos)
+void Driver::pipSetPosition(SePos pos)
 {
 	SePos p1 = pos;
-	rotatePos(pos, getWindowSize(window_Pip), getRotation(window_Pip));
+	rotatePos(pos, getWindowSize(Window::pip), getRotation(Window::pip));
 	debug_i("lcdc.pipSetPosition(%u, %u) -> (%u, %u)", p1.x, p1.y, pos.x, pos.y);
 	regWrite32(REG5A_PIP_XSTART, pos.val);
 }
 
-SePos S1D13781::pipGetPosition()
+SePos Driver::pipGetPosition()
 {
 	SePos pos;
 	pos.val = regReadCached32(REG5A_PIP_XSTART);
 	SePos p1 = pos;
-	rotatePos(pos, getWindowSize(window_Pip), 360 - getRotation(window_Pip));
+	rotatePos(pos, getWindowSize(Window::pip), 360 - getRotation(Window::pip));
 	debug_i("lcdc.pipGetPosition(%u, %u) -> (%u, %u)", p1.x, p1.y, pos.x, pos.y);
 	return pos;
 }
 
-void S1D13781::pipSetFadeRate(uint8_t fadeRate)
+void Driver::pipSetFadeRate(uint8_t fadeRate)
 {
 	regModify(REG60_PIP_EN, 0xFE00, (fadeRate - 1) << 9);
 }
 
-uint8_t S1D13781::pipGetFadeRate()
+uint8_t Driver::pipGetFadeRate()
 {
 	return (regReadCached(REG60_PIP_EN) >> 9) + 1;
 }
 
-bool S1D13781::pipWaitForFade(uint16_t maxTime)
+bool Driver::pipWaitForFade(uint16_t maxTime)
 {
 	return regWaitForLow(REG60_PIP_EN, BIT(3), maxTime);
 }
 
-void S1D13781::pipSetAlphaBlendStep(uint8_t step)
+void Driver::pipSetAlphaBlendStep(uint8_t step)
 {
 	uint8_t bits;
 	if(step <= 1)
@@ -566,24 +568,24 @@ void S1D13781::pipSetAlphaBlendStep(uint8_t step)
 	regModify(REG62_ALPHA, 0x0300, bits << 8);
 }
 
-uint16_t S1D13781::pipGetAlphaBlendStep()
+uint16_t Driver::pipGetAlphaBlendStep()
 {
 	return 1 << (regReadCached(REG62_ALPHA) >> 8);
 }
 
-void S1D13781::pipSetAphaBlendRatio(uint8_t ratio)
+void Driver::pipSetAphaBlendRatio(uint8_t ratio)
 {
 	// Calculate the nearest register value (alphaRegValue) to the Alpha %
 	uint8_t alphaRegValue = (ratio * 64 / 100) & 0x007F;
 	regModify(REG62_ALPHA, 0x007F, alphaRegValue);
 }
 
-uint8_t S1D13781::pipGetAlphaBlendRatio()
+uint8_t Driver::pipGetAlphaBlendRatio()
 {
 	return (regReadCached(REG62_ALPHA) & 0x007F) * 100 / 64;
 }
 
-void S1D13781::pipEnableTransparency(bool enable)
+void Driver::pipEnableTransparency(bool enable)
 {
 	if(enable) {
 		regSetBits(REG64_TRANS, 0x0001);
@@ -592,22 +594,22 @@ void S1D13781::pipEnableTransparency(bool enable)
 	}
 }
 
-bool S1D13781::pipGetTransparency()
+bool Driver::pipGetTransparency()
 {
 	return regReadCached(REG64_TRANS) ? true : false;
 }
 
-void S1D13781::pipSetTransColor(uint32_t xrgbColor)
+void Driver::pipSetTransColor(uint32_t xrgbColor)
 {
 	regWrite32(REG66_KEY_0, xrgbColor);
 }
 
-SeColor S1D13781::pipGetTransColor()
+SeColor Driver::pipGetTransColor()
 {
 	return regReadCached32(REG66_KEY_0);
 }
 
-void S1D13781::pipSetupWindow(uint16_t xPos, uint16_t yPos, uint16_t pipWidth, uint16_t pipHeight)
+void Driver::pipSetupWindow(uint16_t xPos, uint16_t yPos, uint16_t pipWidth, uint16_t pipHeight)
 {
 	//write the width and height of the PIP window
 	SeSize pipSize = {pipWidth, pipHeight};
@@ -615,7 +617,7 @@ void S1D13781::pipSetupWindow(uint16_t xPos, uint16_t yPos, uint16_t pipWidth, u
 
 	//set the x and y position according to the current PIP rotation
 	SePos pos(xPos, yPos);
-	rotatePos(pos, pipSize, getRotation(window_Pip));
+	rotatePos(pos, pipSize, getRotation(Window::pip));
 
 	regWrite32(REG5A_PIP_XSTART, pos.val);
 }
@@ -626,33 +628,33 @@ void S1D13781::pipSetupWindow(uint16_t xPos, uint16_t yPos, uint16_t pipWidth, u
  * ===================================================================== 
 */
 
-static uint32_t getLutAddress(WindowDestination window, uint16_t index)
+static uint32_t getLutAddress(Window window, uint16_t index)
 {
-	uint32_t addr = (window == window_Pip) ? S1D13781_LUT2_BASE : S1D13781_LUT1_BASE;
+	uint32_t addr = (window == Window::pip) ? S1D13781_LUT2_BASE : S1D13781_LUT1_BASE;
 	return addr + (index * 4);
 }
 
-void S1D13781::setLutEntry(WindowDestination window, uint16_t index, SeColor xrgbData)
+void Driver::setLutEntry(Window window, uint16_t index, SeColor xrgbData)
 {
 	writeWord(getLutAddress(window, index), xrgbData.value, 4);
 }
 
-uint32_t S1D13781::getLutEntry(WindowDestination window, uint16_t index)
+uint32_t Driver::getLutEntry(Window window, uint16_t index)
 {
 	return readWord(getLutAddress(window, index), 4);
 }
 
-void S1D13781::setLut(WindowDestination window, uint16_t startIndex, const SeColor* rgbData, uint16_t count)
+void Driver::setLut(Window window, uint16_t startIndex, const SeColor* rgbData, uint16_t count)
 {
 	write(getLutAddress(window, startIndex), rgbData, count * 4);
 }
 
-void S1D13781::getLut(WindowDestination window, uint16_t startIndex, SeColor* rgbData, uint16_t count)
+void Driver::getLut(Window window, uint16_t startIndex, SeColor* rgbData, uint16_t count)
 {
 	read(getLutAddress(window, startIndex), rgbData, count * 4);
 }
 
-void S1D13781::setLutDefault(WindowDestination window)
+void Driver::setLutDefault(Window window)
 {
 	unsigned int lutSize;
 	unsigned int temp;
@@ -710,7 +712,7 @@ void S1D13781::setLutDefault(WindowDestination window)
 		regWrite(REG80_BLT_CTRL_0, 0x0001);                                                                            \
 	}
 
-bool S1D13781::bltSolidFill(WindowDestination window, SePos pos, SeSize size, SeColor color)
+bool Driver::bltSolidFill(Window window, SePos pos, SeSize size, SeColor color)
 {
 	uint16_t bytesPerPixel = getBytesPerPixel(window);
 	if(bytesPerPixel == 0) {
@@ -721,7 +723,7 @@ bool S1D13781::bltSolidFill(WindowDestination window, SePos pos, SeSize size, Se
 		.ctrl0 = 0x0080,
 		.ctrl1 = uint16_t((bytesPerPixel - 1) << 2),
 		.status = 0,
-		.cmd = bltcmd_SolidFill,
+		.cmd = BltCmd::solidFill,
 		.ssAddr = 0,
 		.dsAddr = getAddress(window, pos),
 		.rectOffset = getWidth(window),
@@ -736,8 +738,8 @@ bool S1D13781::bltSolidFill(WindowDestination window, SePos pos, SeSize size, Se
 	return true;
 }
 
-bool S1D13781::bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos dstPos, SeSize dstSize, SeColor fgColor,
-							 SeColor bgColor)
+bool Driver::bltMoveExpand(Window window, uint32_t srcAddr, SePos dstPos, SeSize dstSize, SeColor fgColor,
+						   SeColor bgColor)
 {
 	uint8_t bytesPerPixel = getBytesPerPixel(window);
 	if(bytesPerPixel == 0) {
@@ -748,7 +750,7 @@ bool S1D13781::bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos d
 		.ctrl0 = 0x0080,
 		.ctrl1 = uint16_t(((bytesPerPixel - 1) << 2) | 0x0001),
 		.status = 0,
-		.cmd = bltcmd_MoveExpand,
+		.cmd = BltCmd::moveExpand,
 		.ssAddr = srcAddr,
 		.dsAddr = getAddress(window, dstPos),
 		.rectOffset = getWidth(window),
@@ -763,7 +765,7 @@ bool S1D13781::bltMoveExpand(WindowDestination window, uint32_t srcAddr, SePos d
 	return true;
 }
 
-bool S1D13781::bltMove(WindowDestination window, BltCommand cmd, SePos srcPos, SePos dstPos, SeSize size)
+bool Driver::bltMove(Window window, BltCmd cmd, SePos srcPos, SePos dstPos, SeSize size)
 {
 	uint8_t bytesPerPixel = getBytesPerPixel(window);
 	if(bytesPerPixel == 0) {
@@ -786,3 +788,5 @@ bool S1D13781::bltMove(WindowDestination window, BltCommand cmd, SePos srcPos, S
 
 	return true;
 }
+
+} // namespace S1D13781
