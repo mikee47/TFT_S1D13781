@@ -125,7 +125,7 @@ enum class PipEffect {
 enum class BltCmd : uint16_t {
 	movePositive, ///< Copy rectangular area in VRAM, new address > old address
 	moveNegative, ///< Copy rectangular area in VRAM, new address < old address
-	solidFill,	///< Fill rectangular area
+	solidFill,	  ///< Fill rectangular area
 	reserved03,
 	moveExpand, ///< Copy area bits expanding to current foreground/background colours
 };
@@ -709,7 +709,18 @@ public:
 		MemoryDevice::writeWord(reqWr, address, value, byteCount);
 	}
 
-	// HSPI::MemoryDevice
+	/* HSPI::MemoryDevice */
+
+	HSPI::IoModes getSupportedIoModes() const override
+	{
+		return HSPI::IoMode::SPIHD;
+	}
+
+	size_t getSize() const override
+	{
+		return S1D13781_REG_BASE;
+	}
+
 	void prepareWrite(HSPI::Request& req, uint32_t address) override;
 	void prepareRead(HSPI::Request& req, uint32_t address) override;
 

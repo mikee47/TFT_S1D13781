@@ -1,8 +1,8 @@
 #include "include/S1D13781/fonts.h"
 
 #define XX(name)                                                                                                       \
-	IMPORT_FSTR(name##IndexData, COMPONENT_PATH "/fonts/" #name ".pfi")                                                \
-	IMPORT_FSTR(name##ImageData, COMPONENT_PATH "/fonts/" #name ".pbm")
+	IMPORT_FSTR_LOCAL(name##IndexData, COMPONENT_PATH "/fonts/" #name ".pfi")                                          \
+	IMPORT_FSTR_LOCAL(name##ImageData, COMPONENT_PATH "/fonts/" #name ".pbm")
 FONT_LIST(XX)
 #undef XX
 
