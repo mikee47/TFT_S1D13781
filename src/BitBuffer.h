@@ -62,4 +62,3 @@ private:
 	uint16_t bufSize = 0;
 	uint16_t bitPos = 0;
 };
-

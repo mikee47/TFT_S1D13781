@@ -17,7 +17,7 @@
  * ======================================================================
  */
 
-#include <S1D13781/SeFont.h>
+#include "include/S1D13781/SeFont.h"
 #include "stringutil.h"
 
 #define seSwap(A, B)                                                                                                   \

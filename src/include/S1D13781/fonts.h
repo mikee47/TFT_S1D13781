@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <S1D13781/SeFont.h>
+#include "SeFont.h"
 #include <FlashString/Array.hpp>
 
 #define DEFINE_FONT(name, ...) extern const uint8_t fontData_##name[] PROGMEM = {__VA_ARGS__};
