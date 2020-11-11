@@ -5,13 +5,20 @@ Introduction
 ------------
 
 This is a port of the driver from the
-`Epson S1D13781 display controller <https://www.vdc.epson.com/display-controllers/lcd-controllers/s1d13781/shield-tft-board-for-arduino/s1d13781-shield-graphics-library
->`__ using the :library:`HardwareSPI` library.
+`Epson S1D13781 display controller <https://www.vdc.epson.com/display-controllers/lcd-controllers/s1d13781/shield-tft-board-for-arduino/s1d13781-shield-graphics-library>`__
+using the :library:`HardwareSPI` library.
 
 Evaluation boards are inexpensive and is a useful way to evaluate display modules with TFT interfaces.
 
 The `Newhaven NHD-5.0-800480TF-ATXL#-CTP <https://www.newhavendisplay.com/nhd50800480tfatxlctp-p-6062.html>`__
 was used during development.
+
+.. image:: screentft-s1d13781.jpg
+   :height: 200px
+
+
+Video line: https://youtu.be/UgLX9gEdz6A
+
 
 Notes
 -----
