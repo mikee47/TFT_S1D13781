@@ -23,7 +23,7 @@
 #include <VT100/Terminal.h>
 #include <SeDisplay.h>
 #include <Data/CStringArray.h>
-#include "MemCheckState.h"
+#include <MemCheckState.h>
 
 //#define ENABLE_PIP
 
@@ -1147,7 +1147,7 @@ void DisplayDemo::start()
 
 	debug_i("Checking LCD memory...");
 
-	auto state = new MemCheckState(gfx);
+	auto state = new S1DMemCheckState(gfx);
 	state->onComplete = [this]() {
 		drawLogo();
 		demoTimer.initializeMs<3000>(TimerDelegate(&DisplayDemo::test_vt100, this)).startOnce();
