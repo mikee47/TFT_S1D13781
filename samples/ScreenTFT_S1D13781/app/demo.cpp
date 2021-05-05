@@ -814,7 +814,7 @@ void DisplayDemo::lcdMemCheck1()
 		}
 
 		if(read.addr < maxAddr) {
-			gfx.read(reqRd, read.addr, readBuffer, bufSize, [](HSPI::Request&) {});
+			gfx.read(reqRd, read.addr, readBuffer, bufSize, nullptr);
 		} else {
 			break; // done
 		}

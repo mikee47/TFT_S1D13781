@@ -222,7 +222,7 @@ uint16_t Driver::regClearBits(uint8_t regIndex, uint16_t clearBits)
 
 void Driver::prepareWrite(HSPI::Request& req, uint32_t address)
 {
-	req.prepare();
+	wait(req);
 	req.setCommand8(SPIWRITE_8BIT);
 	req.setAddress24(address);
 	req.dummyLen = 0;
@@ -230,7 +230,7 @@ void Driver::prepareWrite(HSPI::Request& req, uint32_t address)
 
 void Driver::prepareRead(HSPI::Request& req, uint32_t address)
 {
-	req.prepare();
+	wait(req);
 	req.setCommand8(SPIREAD_8BIT);
 	req.setAddress24(address);
 	req.dummyLen = 8;
