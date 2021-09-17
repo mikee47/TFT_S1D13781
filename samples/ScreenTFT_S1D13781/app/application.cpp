@@ -9,6 +9,12 @@ DisplayDemo demo(graphics);
 // Chip selects to use for our devices
 #define CS_LCD 2
 
+#ifdef ARCH_ESP32
+#define SPI_PINSET HSPI::PinSet::normal
+#else
+#define SPI_PINSET HSPI::PinSet::overlap
+#endif
+
 void init()
 {
 // Start serial for serial monitor
@@ -24,13 +30,11 @@ void init()
 	spi.begin();
 
 	// Initialise display and start demo
-	graphics.setSpeed(27000000U);
-	debug_i("LCD clock = %u", graphics.getSpeed());
-
-	if(!graphics.begin(HSPI::PinSet::overlap, CS_LCD)) {
+	if(!graphics.begin(SPI_PINSET, CS_LCD, 27000000U)) {
 		debug_e("Failed to start LCD device");
 	} else {
-//		graphics.setRotation(S1D13781::Window::main, 0);
+		debug_i("LCD clock = %u", graphics.getSpeed());
+		//		graphics.setRotation(S1D13781::Window::main, 0);
 		demo.start();
 	}
 }

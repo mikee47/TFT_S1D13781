@@ -125,7 +125,7 @@ enum class PipEffect {
 enum class BltCmd : uint16_t {
 	movePositive, ///< Copy rectangular area in VRAM, new address > old address
 	moveNegative, ///< Copy rectangular area in VRAM, new address < old address
-	solidFill,	  ///< Fill rectangular area
+	solidFill,	///< Fill rectangular area
 	reserved03,
 	moveExpand, ///< Copy area bits expanding to current foreground/background colours
 };
@@ -139,9 +139,8 @@ public:
 
 	/** @brief This method should be run once to setup the SPI interface used by
 	 * 	the S1D13781 evaluation board and configure the registers.
-	 * 	Note that bus speed must already be configured.
 	 */
-	bool begin(HSPI::PinSet pinSet, uint8_t chipSelect);
+	bool begin(HSPI::PinSet pinSet, uint8_t chipSelect, uint32_t clockSpeed);
 
 	// Direct register and memory access
 

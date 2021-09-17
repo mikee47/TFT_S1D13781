@@ -106,9 +106,9 @@ Driver::~Driver()
 	delete cache;
 }
 
-bool Driver::begin(HSPI::PinSet pinSet, uint8_t chipSelect)
+bool Driver::begin(HSPI::PinSet pinSet, uint8_t chipSelect, uint32_t clockSpeed)
 {
-	if(!MemoryDevice::begin(pinSet, chipSelect)) {
+	if(!MemoryDevice::begin(pinSet, chipSelect, clockSpeed)) {
 		return false;
 	}
 
