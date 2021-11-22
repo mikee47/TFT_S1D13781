@@ -602,7 +602,7 @@ public:
 	 * - the data from the specified LUT entry
 	 *
 	*/
-	unsigned int getLutEntry(Window window, uint16_t index);
+	uint32_t getLutEntry(Window window, uint16_t index);
 
 	/** @brief Setup a LUT
 	 * @todo

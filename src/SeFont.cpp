@@ -792,7 +792,7 @@ unsigned SeFont::captureFontIndexFile(uint8_t* dFileBuffer, unsigned dFileBuffer
 
 	// Write out ISO Latin-1 characters.
 	for(i = 0; i < 256; i++) {
-		if(i != defaultChar) {
+		if(wchar_t(i) != defaultChar) {
 			if(!_captureFontIndexCharacter(dFileBuffer, dFileBufferSize, &iBuf, (wchar_t)i, binaryData)) {
 				return 0;
 			}
