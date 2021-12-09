@@ -31,7 +31,7 @@ const uint32_t S1D13781_REG_BASE = 0x060800;
 		(B) = T;                                                                                                       \
 	}
 
-/** @brief Two consective registers contain an (x, y) co-ordinate and may be handled in a single transfer */
+/** @brief Two consecutive registers contain an (x, y) coordinate and may be handled in a single transfer */
 union SePos {
 	struct {
 		uint16_t x;

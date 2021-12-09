@@ -413,7 +413,7 @@ unsigned SeFont::parseImageData(const FlashString& imageData)
 
 	imageWidth = parameters[0];
 	imageHeight = parameters[1];
-	//TODO: update to accomodate various formats (for now only 1bpp)
+	//TODO: update to accommodate various formats (for now only 1bpp)
 	imageStride = imageWidth / 8;
 	if(imageWidth % 8) {
 		++imageStride;
@@ -721,7 +721,7 @@ unsigned SeFont::getTextWidthW(const wchar_t* text, unsigned textLen) const
 
 /* captureFontIndexFile()
  * Method to generate the contents for a font index file from a given
- * Font. This method is provided as a convenience to genereate binary
+ * Font. This method is provided as a convenience to generate binary
  * versions of the index files (which are smaller than the ASCII
  * versions).
  * 

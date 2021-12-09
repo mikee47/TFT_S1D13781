@@ -59,13 +59,13 @@ struct SeRect {
 		return SeSize(width, height);
 	}
 
-	/** @brief bounding x co-ordinate outside rectangle */
+	/** @brief bounding x coordinate outside rectangle */
 	int16_t x2() const
 	{
 		return x + int16_t(width);
 	}
 
-	/** @brief bounding y co-ordinate outside rectangle */
+	/** @brief bounding y coordinate outside rectangle */
 	int16_t y2() const
 	{
 		return y + int16_t(height);
